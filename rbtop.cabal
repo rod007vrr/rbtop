@@ -25,8 +25,12 @@ source-repository head
 
 library
   exposed-modules:
+      ConfigState
       Lib
+      MemoryCollector
+      ProcessCollector
       SystemState
+      UIManager
   other-modules:
       Paths_rbtop
   autogen-modules:
