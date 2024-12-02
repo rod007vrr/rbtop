@@ -3,12 +3,15 @@
 module ProcessCollector
   ( ProcessedProcess (..),
     ProcessedProcessList,
+    sortByCPU,
+    sortByMemory,
+    sortByPID,
+    sortByName,
   )
 where
 
 import Data.Function
 import Data.List
-import Test.QuickCheck
 
 data ProcessedProcess = ProcessedProcess
   { -- | Unix timestamp when process was sampled
@@ -45,28 +48,3 @@ sortByPID = sortBy (compare `on` pid)
 -- | Sort processes by name (ascending)
 sortByName :: [ProcessedProcess] -> [ProcessedProcess]
 sortByName = sortBy (compare `on` name)
-
--- | Properties for testing sort functions
-prop_sortByCPUDesc :: [ProcessedProcess] -> Property
-prop_sortByCPUDesc ps =
-  not (null ps)
-    ==> let sorted = sortByCPU ps
-         in all (\(a, b) -> cpuPercent a >= cpuPercent b) $ zip sorted (tail sorted)
-
-prop_sortByMemoryDesc :: [ProcessedProcess] -> Property
-prop_sortByMemoryDesc ps =
-  not (null ps)
-    ==> let sorted = sortByMemory ps
-         in all (\(a, b) -> memoryUsage a >= memoryUsage b) $ zip sorted (tail sorted)
-
-prop_sortByPIDAsc :: [ProcessedProcess] -> Property
-prop_sortByPIDAsc ps =
-  not (null ps)
-    ==> let sorted = sortByPID ps
-         in all (\(a, b) -> pid a <= pid b) $ zip sorted (tail sorted)
-
-prop_sortByNameAsc :: [ProcessedProcess] -> Property
-prop_sortByNameAsc ps =
-  not (null ps)
-    ==> let sorted = sortByName ps
-         in all (\(a, b) -> name a <= name b) $ zip sorted (tail sorted)

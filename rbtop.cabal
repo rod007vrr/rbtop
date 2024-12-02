@@ -63,6 +63,12 @@ test-suite rbtop-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      ConfigStateTest
+      CPUCollectorTest
+      MemoryCollectorTest
+      ProcessCollectorTest
+      SystemStateTest
+      UIManagerTest
       Paths_rbtop
   autogen-modules:
       Paths_rbtop
@@ -70,7 +76,8 @@ test-suite rbtop-test
       test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      QuickCheck
+      HUnit
+    , QuickCheck
     , base >=4.7 && <5
     , rbtop
   default-language: Haskell2010
