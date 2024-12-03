@@ -69,11 +69,19 @@ test-suite rbtop-test
       ProcessCollectorTest
       SystemStateTest
       UIManagerTest
+      ConfigState
+      CPUCollector
+      Lib
+      MemoryCollector
+      ProcessCollector
+      SystemState
+      UIManager
       Paths_rbtop
   autogen-modules:
       Paths_rbtop
   hs-source-dirs:
       test
+      src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       HUnit

@@ -1,6 +1,13 @@
 module ConfigStateTest (configStateTests) where
 
 import ConfigState
+  ( ConfigState (..),
+    DisplayMode (..),
+    ProcessSortMethod (..),
+    configToString,
+    defaultConfig,
+    parseConfigString,
+  )
 import Test.HUnit
 
 configStateTests :: Test
@@ -21,3 +28,9 @@ testProcessDisplayLimit =
   TestCase $
     let config = ConfigState SortByMemory ShowProcesses 20
      in assertBool "Process display limit is positive" (processDisplayLimit config > 0)
+
+testConfigRoundtrip :: ConfigState -> Bool
+testConfigRoundtrip config =
+  case parseConfigString (configToString config) of
+    Just parsedConfig -> parsedConfig == config
+    Nothing -> False
