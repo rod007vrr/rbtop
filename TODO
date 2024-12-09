@@ -1,3 +1,7 @@
-- need to add in stepping logic with time and looping functions for that
-- some stub functions for how we parse in all the data
-- some stub functions for how we render everything
+- more unit tests by manually feeding in the string
+- some form of prop based testing with some of these 
+- generate the AST and print that out and add some space in the middle there and parse that in 
+make sure that we have the same values for everything there
+
+- test cases are a big deal!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+- make em work forreal

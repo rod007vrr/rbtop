@@ -3,8 +3,10 @@
 module CPUCollector
   ( ProcessedCPU (..),
     ProcessedCPUList,
-    getCommandOutput,
-    processListP,
+    getRawCPUData,
+    processCPUData,
+    parseCPUStats,
+    printCPUStats,
   )
 where
 
@@ -25,64 +27,46 @@ data ProcessedCPU = ProcessedCPU
     -- | System/kernel CPU usage percentage (0-100)
     systemUsage :: Double,
     -- | Idle CPU percentage (0-100)
-    idleUsage :: Double,
-    -- | IO wait percentage (0-100)
-    ioWaitUsage :: Double
+    idleUsage :: Double
   }
   deriving (Show, Eq)
 
 type ProcessedCPUList = [ProcessedCPU]
 
--- Basic system command (returns ExitCode)
+getRawCPUData :: IO String
+getRawCPUData = readCreateProcess (shell "top -l 1 -n 0 | grep \"CPU usage\"") ""
 
--- Run command and get output as String
-getCommandOutput :: IO String
-getCommandOutput = readProcess "ps" ["aux"] ""
+-- | Print the CPU stats to stdout
+processCPUData :: Parser ProcessedCPU
+processCPUData =
+  ProcessedCPU
+    <$> pure 0
+    <* P.wsP (P.string "CPU usage:")
+    <*> (P.wsP P.double <* P.string "%" <* P.wsP (P.string "user,"))
+    <*> (P.wsP P.double <* P.string "%" <* P.wsP (P.string "sys,"))
+    <*> (P.wsP P.double <* P.string "%" <* P.wsP (P.string "idle\n"))
+    <*> pure 0 -- totalUsage (can calculate after)
 
--- First define a data type to hold the process information
-data Process = Process
-  { user :: String,
-    pid :: Int,
-    cpuPct :: Double,
-    memPct :: Double,
-    vsz :: Int,
-    rss :: Int,
-    tt :: String,
-    stat :: String,
-    started :: String,
-    time :: String,
-    cmd :: String
-  }
-  deriving (Show, Eq)
+-- | Parse CPU stats from raw input string
+parseCPUStats :: String -> Maybe ProcessedCPU
+parseCPUStats input = case P.parse processCPUData input of
+  Right cpu -> Just $ cpu {totalUsage = userUsage cpu + systemUsage cpu}
+  Left _ -> Nothing
 
--- Parser for a single process line
-processLineP :: Parser Process
-processLineP =
-  Process
-    <$> wsP (many (P.satisfy (not . Char.isSpace)))
-    <*> wsP P.int
-    <*> wsP P.double
-    <*> wsP P.double
-    <*> wsP P.int
-    <*> wsP P.int
-    <*> wsP (many (P.satisfy (not . Char.isSpace)))
-    <*> wsP (many (P.satisfy (not . Char.isSpace)))
-    <*> wsP (many (P.satisfy (not . Char.isSpace)))
-    <*> wsP (many (P.satisfy (not . Char.isSpace)))
-    <*> wsP (many (P.satisfy (/= '\n')))
-
--- Parser for multiple process lines
-processListP :: Parser [Process]
-processListP =
-  skipHeaderP *> many processLineP
+-- | Run and print CPU stats
+printCPUStats :: IO ()
+printCPUStats = do
+  rawData <- getRawCPUData
+  putStrLn $ "Raw data: '" ++ rawData ++ "'" -- Added quotes to see whitespace
+  case parseCPUStats rawData of
+    Just cpu -> putStrLn $ formatCPUStats cpu
+    Nothing -> putStrLn "Failed to parse CPU stats"
   where
-    skipHeaderP = P.createParser $ \input ->
-      case break (== '\n') input of
-        (_, rest) -> Just ((), drop 1 rest)
-
--- | removes trailing whitespace
-wsP :: Parser a -> Parser a
-wsP p = p <* many P.space
-
--- Example usage:
--- P.parse processListP "PID TTY
+    formatCPUStats cpu =
+      unlines
+        [ "CPU Stats:",
+          "  Total Usage: " ++ show (totalUsage cpu) ++ "%",
+          "  User Usage: " ++ show (userUsage cpu) ++ "%",
+          "  System Usage: " ++ show (systemUsage cpu) ++ "%",
+          "  Idle Usage: " ++ show (idleUsage cpu) ++ "%"
+        ]

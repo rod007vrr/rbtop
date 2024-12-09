@@ -32,7 +32,6 @@ library
       Lib
       MemoryCollector
       ProcessCollector
-      ProcessDataCollector
       SystemState
       UIManager
       Paths_rbtop
@@ -46,7 +45,7 @@ library
     , base >=4.7 && <5
     , process
   default-language: Haskell2010
-
+-- add something here to link this and library
 executable rbtop-exe
   main-is: Main.hs
   other-modules:
@@ -74,11 +73,11 @@ test-suite rbtop-test
       SystemStateTest
       UIManagerTest
       ConfigState
+      CPUCollector
       Lib
       MemoryCollector
       Parser
       ProcessCollector
-      ProcessDataCollector
       SystemState
       UIManager
       Paths_rbtop

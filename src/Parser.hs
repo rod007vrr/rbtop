@@ -32,6 +32,7 @@ module Parser
     createParser,
     anyChar,
     double,
+    wsP,
   )
 where
 
@@ -205,4 +206,6 @@ double = f <$> ((++) <$> string "-" <*> floatDigits <|> floatDigits)
       Just x -> x
       Nothing -> error $ "Bug: can't parse '" ++ str ++ "' as a float"
 
----------------------------------------------
+-- | removes trailing whitespace
+wsP :: Parser a -> Parser a
+wsP p = p <* many space

@@ -6,7 +6,7 @@ where
 import CPUCollector (ProcessedCPU)
 import ConfigState (ConfigState (..), DisplayMode (..), ProcessSortMethod (..))
 import MemoryCollector (ProcessedMemory)
-import ProcessCollector (ProcessedProcess)
+import ProcessCollector (Process)
 
 -- | Represents the rendered UI elements and their data
 data UIState = UIState
@@ -17,7 +17,7 @@ data UIState = UIState
     -- | CPU information being displayed
     displayedCPU :: ProcessedCPU,
     -- | List of processes being displayed
-    displayedProcesses :: [ProcessedProcess],
+    displayedProcesses :: [Process],
     -- | Whether the help dialog is visible
     showingHelp :: Bool,
     -- | Whether the quit confirmation dialog is visible

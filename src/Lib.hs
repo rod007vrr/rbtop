@@ -1,8 +1,8 @@
 module Lib
   ( parseMemoryStats,
     parseCPUStats,
-    parseProcessStats,
-    updateSystemState,
+    -- parseProcessStats,
+    -- updateSystemState,
     formatMemoryStats,
     formatCPUStats,
     formatProcessStats,
@@ -35,24 +35,23 @@ parseCPUStats input =
       user = read userStr :: Double
       system = read systemStr :: Double
       idle = read idleStr :: Double
-      ioWait = read ioWaitStr :: Double
-   in CPU.ProcessedCPU timestamp total user system idle ioWait
+   in CPU.ProcessedCPU timestamp total user system idle
 
 -- | Parses a process usage string into a ProcessedProcess object
 -- Example input format: "0 1234 process_name 10.0 204800 102400 51200"
-parseProcessStats :: String -> Process.ProcessedProcess
-parseProcessStats input =
-  let [timestamp, pid, name, cpuUsage, memUsage, virtMem, resMem] = words input
-   in Process.ProcessedProcess (read timestamp) (read pid) name (read cpuUsage) (read memUsage) (read virtMem) (read resMem)
+-- parseProcessStats :: String -> Process.Process
+-- parseProcessStats input =
+--   let [timestamp, pid, name, cpuUsage, memUsage, virtMem, resMem] = words input
+--    in Process.Process (read timestamp) (read pid) name (read cpuUsage) (read memUsage) (read virtMem) (read resMem)
 
 -- | Advances the system state by one step, e.g., to simulate time updates
-updateSystemState :: SystemState -> SystemState
-updateSystemState (SystemState memory cpu processes) =
-  SystemState
-    { memoryStats = memory {Memory.timestamp = Memory.timestamp memory + 1},
-      cpuStats = cpu {CPU.timestamp = CPU.timestamp cpu + 1},
-      processStats = map (\p -> p {Process.timestamp = Process.timestamp p + 1}) processes
-    }
+-- updateSystemState :: SystemState -> SystemState
+-- updateSystemState (SystemState memory cpu processes) =
+--   SystemState
+--     { memoryStats = memory {Memory.timestamp = Memory.timestamp memory + 1},
+--       cpuStats = cpu {CPU.timestamp = CPU.timestamp cpu + 1},
+--       processStats = map (\p -> p {Process.time = Process.timestamp p + 1}) processes
+--     }
 
 -- | Formats memory statistics into a human-readable string
 formatMemoryStats :: Memory.ProcessedMemory -> String
@@ -74,12 +73,11 @@ formatCPUStats cpu =
       "  Total Usage: " ++ show (CPU.totalUsage cpu) ++ "%",
       "  User Usage: " ++ show (CPU.userUsage cpu) ++ "%",
       "  System Usage: " ++ show (CPU.systemUsage cpu) ++ "%",
-      "  Idle Usage: " ++ show (CPU.idleUsage cpu) ++ "%",
-      "  IO Wait: " ++ show (CPU.ioWaitUsage cpu) ++ "%"
+      "  Idle Usage: " ++ show (CPU.idleUsage cpu) ++ "%"
     ]
 
 -- | Formats a list of processes into a human-readable string
-formatProcessStats :: Process.ProcessedProcessList -> String
+formatProcessStats :: Process.ProcessList -> String
 formatProcessStats processes =
   unlines $ "Processes:" : map formatProcess processes
   where
@@ -87,7 +85,7 @@ formatProcessStats processes =
       intercalate
         " | "
         [ "PID: " ++ show (Process.pid p),
-          "Name: " ++ Process.name p,
-          "CPU Usage: " ++ show (Process.cpuPercent p) ++ "%",
-          "Memory Usage: " ++ show (Process.memoryUsage p) ++ " bytes"
+          "Name: " ++ Process.cmd p,
+          "CPU Usage: " ++ show (Process.cpuPct p) ++ "%",
+          "Memory Usage: " ++ show (Process.memPct p) ++ " bytes"
         ]
