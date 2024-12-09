@@ -31,6 +31,7 @@ module Parser
     sepBy,
     createParser,
     anyChar,
+    double,
   )
 where
 
@@ -41,7 +42,7 @@ import Data.Foldable (asum)
 import qualified System.IO as IO
 import qualified System.IO.Error as IO
 import Text.Read (readMaybe)
-import Prelude hiding (filter)
+import Prelude hiding (filter, floatDigits)
 
 -- definition of the parser type
 newtype Parser a = P {doParse :: String -> Maybe (a, String)}
@@ -194,5 +195,14 @@ anyChar :: Parser Char
 anyChar = createParser $ \case
   (c : cs) -> Just (c, cs)
   [] -> Nothing
+
+-- | succeed only if the input is a (positive or negative) float
+double :: Parser Double
+double = f <$> ((++) <$> string "-" <*> floatDigits <|> floatDigits)
+  where
+    floatDigits = (++) <$> some digit <*> (((++) <$> string "." <*> some digit) <|> pure "")
+    f str = case readMaybe str of
+      Just x -> x
+      Nothing -> error $ "Bug: can't parse '" ++ str ++ "' as a float"
 
 ---------------------------------------------

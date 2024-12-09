@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.37.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -26,12 +26,13 @@ source-repository head
 library
   exposed-modules:
       CPUCollector
+      Parser
   other-modules:
       ConfigState
       Lib
       MemoryCollector
-      Parser
       ProcessCollector
+      ProcessDataCollector
       SystemState
       UIManager
       Paths_rbtop
@@ -73,11 +74,11 @@ test-suite rbtop-test
       SystemStateTest
       UIManagerTest
       ConfigState
-      CPUCollector
       Lib
       MemoryCollector
       Parser
       ProcessCollector
+      ProcessDataCollector
       SystemState
       UIManager
       Paths_rbtop
