@@ -5,7 +5,6 @@ import ConfigState
     DisplayMode (..),
     ProcessSortMethod (..),
     configToString,
-    defaultConfig,
     parseConfigString,
   )
 import Test.HUnit

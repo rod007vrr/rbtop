@@ -1,5 +1,3 @@
-module UIManagerTest (uiManagerTests) where
-
 import ConfigState
 import Test.HUnit
 import UIManager

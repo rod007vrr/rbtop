@@ -7,8 +7,7 @@
 -- exported by this file, as well as the `Functor`, `Applicative` and
 -- `Alternative` operations.
 module Parser
-  ( Parser,
-    doParse,
+  ( Parser (..),
     get,
     eof,
     filter,
@@ -31,6 +30,7 @@ module Parser
     sepBy1,
     sepBy,
     createParser,
+    anyChar,
   )
 where
 
@@ -189,5 +189,10 @@ sepBy p sep = sepBy1 p sep <|> pure []
 --   Returns a list of values returned by @p@.
 sepBy1 :: Parser a -> Parser sep -> Parser [a]
 sepBy1 p sep = (:) <$> p <*> many (sep *> p)
+
+anyChar :: Parser Char
+anyChar = createParser $ \case
+  (c : cs) -> Just (c, cs)
+  [] -> Nothing
 
 ---------------------------------------------

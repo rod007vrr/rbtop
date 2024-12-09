@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.37.0.
+-- This file has been generated from package.yaml by hpack version 0.36.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -25,14 +25,15 @@ source-repository head
 
 library
   exposed-modules:
-      ConfigState
       CPUCollector
+  other-modules:
+      ConfigState
       Lib
       MemoryCollector
+      Parser
       ProcessCollector
       SystemState
       UIManager
-  other-modules:
       Paths_rbtop
   autogen-modules:
       Paths_rbtop
@@ -42,6 +43,7 @@ library
   build-depends:
       QuickCheck
     , base >=4.7 && <5
+    , process
   default-language: Haskell2010
 
 executable rbtop-exe
@@ -56,6 +58,7 @@ executable rbtop-exe
   build-depends:
       QuickCheck
     , base >=4.7 && <5
+    , process
     , rbtop
   default-language: Haskell2010
 
@@ -73,6 +76,7 @@ test-suite rbtop-test
       CPUCollector
       Lib
       MemoryCollector
+      Parser
       ProcessCollector
       SystemState
       UIManager
@@ -87,5 +91,6 @@ test-suite rbtop-test
       HUnit
     , QuickCheck
     , base >=4.7 && <5
+    , process
     , rbtop
   default-language: Haskell2010
