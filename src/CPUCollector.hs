@@ -4,14 +4,14 @@ module CPUCollector
   ( ProcessedCPU (..),
     ProcessedCPUList,
     getRawCPUData,
-    processCPUData,
-    parseCPUStats,
-    printCPUStats,
+    -- processCPUData,
+    -- parseCPUStats,
+    -- printCPUStats,
+    printRawCPUStats,
   )
 where
 
 import Control.Applicative
-import Data.Char qualified as Char
 import Parser (Parser (..))
 import Parser qualified as P
 import System.Process
@@ -31,42 +31,38 @@ data ProcessedCPU = ProcessedCPU
   }
   deriving (Show, Eq)
 
+data RawCPU = RawCPU
+  { user :: Double,
+    sys :: Double,
+    idle :: Double
+  }
+  deriving (Show, Eq)
+
 type ProcessedCPUList = [ProcessedCPU]
 
 getRawCPUData :: IO String
-getRawCPUData = readCreateProcess (shell "top -l 1 -n 0 | grep \"CPU usage\"") ""
+getRawCPUData = do
+  result <- readCreateProcess (shell "top -l 1 -n 0 | grep \"CPU usage\"") ""
+  putStrLn $ "Debug - Raw data length: " ++ show (length result)
+  putStrLn $ "Debug - Raw data bytes: " ++ show (map (fromEnum) result)
+  return result
 
--- | Print the CPU stats to stdout
-processCPUData :: Parser ProcessedCPU
-processCPUData =
-  ProcessedCPU
-    <$> pure 0
-    <* P.wsP (P.string "CPU usage:")
-    <*> (P.wsP P.double <* P.string "%" <* P.wsP (P.string "user,"))
-    <*> (P.wsP P.double <* P.string "%" <* P.wsP (P.string "sys,"))
-    <*> (P.wsP P.double <* P.string "%" <* P.wsP (P.string "idle\n"))
-    <*> pure 0 -- totalUsage (can calculate after)
+processRawCPUData :: Parser RawCPU
+processRawCPUData =
+  RawCPU
+    <$> (P.string "CPU usage:" *> P.char ' ' *> P.double <* P.string "% user,")
+    <*> (P.char ' ' *> P.double <* P.string "% sys,")
+    <*> (P.char ' ' *> P.double <* P.string "% idle" <* many (P.satisfy (\c -> c == ' ' || c == '\n')))
 
--- | Parse CPU stats from raw input string
-parseCPUStats :: String -> Maybe ProcessedCPU
-parseCPUStats input = case P.parse processCPUData input of
-  Right cpu -> Just $ cpu {totalUsage = userUsage cpu + systemUsage cpu}
-  Left _ -> Nothing
+rawToFull :: RawCPU -> ProcessedCPU
+rawToFull r =
+  ProcessedCPU 0 (user r + sys r) (user r) (sys r) (idle r)
 
--- | Run and print CPU stats
-printCPUStats :: IO ()
-printCPUStats = do
+-- | Run and print raw CPU stats
+printRawCPUStats :: IO ()
+printRawCPUStats = do
   rawData <- getRawCPUData
-  putStrLn $ "Raw data: '" ++ rawData ++ "'" -- Added quotes to see whitespace
-  case parseCPUStats rawData of
-    Just cpu -> putStrLn $ formatCPUStats cpu
-    Nothing -> putStrLn "Failed to parse CPU stats"
-  where
-    formatCPUStats cpu =
-      unlines
-        [ "CPU Stats:",
-          "  Total Usage: " ++ show (totalUsage cpu) ++ "%",
-          "  User Usage: " ++ show (userUsage cpu) ++ "%",
-          "  System Usage: " ++ show (systemUsage cpu) ++ "%",
-          "  Idle Usage: " ++ show (idleUsage cpu) ++ "%"
-        ]
+  putStrLn $ "Raw data: '" ++ rawData ++ "'"
+  case P.parse processRawCPUData rawData of
+    Right rawCpu -> print $ rawToFull rawCpu
+    Left err -> putStrLn err

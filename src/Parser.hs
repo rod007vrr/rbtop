@@ -110,7 +110,7 @@ type ParseError = String
 -- give it a type similar to other Parsing libraries.
 parse :: Parser a -> String -> Either ParseError a
 parse parser str = case doParse parser str of
-  Nothing -> Left "No parses"
+  Nothing -> Left $ "No parses" ++ str
   Just (a, _) -> Right a
 
 -- | parseFromFile p filePath runs a string parser p on the input
