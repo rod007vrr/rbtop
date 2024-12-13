@@ -1,23 +1,85 @@
+{-# LANGUAGE ImportQualifiedPost #-}
+
 module MemoryCollector
   ( ProcessedMemory (..),
     ProcessedMemoryList,
+    printRawMemoryStats,
   )
 where
 
+import Control.Applicative
+import Parser (Parser (..))
+import Parser qualified as P
+import System.Process (readProcess)
+import Prelude hiding (filter)
+
 data ProcessedMemory = ProcessedMemory
   { -- | Unix timestamp when memory was sampled
-    timestamp :: Integer,
+    timestamp :: Int,
     -- | Total system memory in bytes
-    totalMem :: Integer,
+    totalMem :: Int,
     -- | Used memory in bytes
-    usedMem :: Integer,
+    usedMem :: Int,
     -- | Free memory in bytes
-    freeMem :: Integer,
-    -- | Cached memory in bytes
-    cached :: Integer,
-    -- | Buffer memory in bytes
-    buffers :: Integer
+    freeMem :: Int
   }
   deriving (Show, Eq)
 
 type ProcessedMemoryList = [ProcessedMemory]
+
+data RawMemory = RawMemory
+  { totalMemSize :: Int, -- in bytes
+    pageSize :: Int, -- in bytes
+    totalPages :: Int,
+    freePages :: Int,
+    purgeablePages :: Int,
+    pagesPurged :: Int,
+    activePages :: Int,
+    inactivePages :: Int,
+    speculativePages :: Int,
+    wiredPages :: Int,
+    compressorPages :: Int,
+    decompressedPages :: Int,
+    compressedPages :: Int,
+    pageIn :: Int,
+    pageOut :: Int,
+    memFreePercent :: Double
+  }
+  deriving (Show, Eq)
+
+getRawMemoryData :: IO String
+getRawMemoryData = readProcess "memory_pressure" [] ""
+
+processMemoryData :: P.Parser RawMemory
+processMemoryData =
+  RawMemory
+    <$> (P.string "The system has " *> P.int <* P.string " (")
+    <*> (P.int <* P.string " pages with a page size of ")
+    <*> (P.int <* P.string ").\n\nStats: \nPages free: ")
+    <*> (P.int <* P.string " \nPages purgeable: ")
+    <*> (P.int <* P.string " \nPages purged: ")
+    <*> ( P.int
+            <* P.string " \n\nSwap I/O:\nSwapins: "
+            *> P.int
+            <* P.string " \nSwapouts: "
+            *> P.int
+            <* P.string " \n\nPage Q counts:\nPages active: "
+        )
+    <*> (P.int <* P.string " \nPages inactive: ")
+    <*> (P.int <* P.string " \nPages speculative: ")
+    <*> (P.int <* P.string " \nPages throttled: " *> P.int <* P.string " \nPages wired down: ")
+    <*> (P.int <* P.string " \n\nCompressor Stats:\nPages used by compressor: ")
+    <*> (P.int <* P.string " \nPages decompressed: ")
+    <*> (P.int <* P.string " \nPages compressed: ")
+    <*> (P.int <* P.string " \n\nFile I/O:\nPageins: ")
+    <*> (P.int <* P.string " \nPageouts: ")
+    <*> (P.int <* P.string " \n\nSystem-wide memory free percentage: ")
+    <*> (P.double <* P.char '%' <* many (P.satisfy (\c -> c == ' ' || c == '\n')))
+
+-- | Run and print raw memory stats
+printRawMemoryStats :: IO ()
+printRawMemoryStats = do
+  rawData <- getRawMemoryData
+  case P.parse processMemoryData rawData of
+    Right rawMemory -> print rawMemory
+    Left err -> putStrLn err
