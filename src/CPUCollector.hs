@@ -4,29 +4,26 @@ module CPUCollector
   ( ProcessedCPU (..),
     ProcessedCPUList,
     getRawCPUData,
-    -- processCPUData,
-    -- parseCPUStats,
-    -- printCPUStats,
     printRawCPUStats,
   )
 where
 
 import Control.Applicative
-import Parser (Parser (..))
+import Parser (Parser)
 import Parser qualified as P
 import System.Process
 import Prelude hiding (filter)
 
 data ProcessedCPU = ProcessedCPU
-  { -- | Unix timestamp when CPU was sampled
+  { -- |  timestamp when CPU was sampled
     timestamp :: Integer,
-    -- | Total CPU usage percentage (0-100)
+    -- | CPU usage percentage
     totalUsage :: Double,
-    -- | User space CPU usage percentage (0-100)
+    -- | User space CPU usage percentage
     userUsage :: Double,
-    -- | System/kernel CPU usage percentage (0-100)
+    -- | System/kernel CPU usage percentage
     systemUsage :: Double,
-    -- | Idle CPU percentage (0-100)
+    -- | Idle CPU percentage
     idleUsage :: Double
   }
   deriving (Show, Eq)
@@ -41,11 +38,8 @@ data RawCPU = RawCPU
 type ProcessedCPUList = [ProcessedCPU]
 
 getRawCPUData :: IO String
-getRawCPUData = do
-  result <- readCreateProcess (shell "top -l 1 -n 0 | grep \"CPU usage\"") ""
-  putStrLn $ "Debug - Raw data length: " ++ show (length result)
-  putStrLn $ "Debug - Raw data bytes: " ++ show (map (fromEnum) result)
-  return result
+getRawCPUData =
+  readCreateProcess (shell "top -l 1 -n 0 | grep \"CPU usage\"") ""
 
 processRawCPUData :: Parser RawCPU
 processRawCPUData =

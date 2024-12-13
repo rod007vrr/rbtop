@@ -5,6 +5,9 @@ module ConfigState
     parseConfigString,
     configToString,
     defaultConfig,
+    writeConfig,
+    testConfigRoundtrip,
+    readConfig,
   )
 where
 

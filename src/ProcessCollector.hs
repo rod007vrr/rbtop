@@ -19,9 +19,9 @@ import Data.Char qualified as Char
 import Data.Function
 import Data.List
 -- import Data.Time.Clock
-import Parser (Parser (..))
+import Parser (Parser)
 import Parser qualified as P
-import System.Process
+import System.Process (readProcess)
 import Prelude hiding (filter)
 
 type ProcessList = [Process]

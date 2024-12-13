@@ -36,10 +36,10 @@ module Parser
   )
 where
 
-import Control.Applicative (Alternative (..))
+import Control.Applicative
 import Control.Monad (guard)
 import Data.Char
-import Data.Foldable (asum)
+-- import Data.Foldable (asum)
 import qualified System.IO as IO
 import qualified System.IO.Error as IO
 import Text.Read (readMaybe)
@@ -74,25 +74,20 @@ instance Alternative Parser where
   (<|>) :: Parser a -> Parser a -> Parser a
   p1 <|> p2 = P $ \s -> doParse p1 s `firstJust` doParse p2 s
 
--- | Combine two Maybe values together, producing the first
--- successful result
 firstJust :: Maybe a -> Maybe a -> Maybe a
 firstJust (Just x) _ = Just x
 firstJust Nothing y = y
 
--- | Return the next character from the input
 get :: Parser Char
 get = P $ \case
   (c : cs) -> Just (c, cs)
   [] -> Nothing
 
--- | This parser *only* succeeds at the end of the input.
 eof :: Parser ()
 eof = P $ \case
   [] -> Just ((), [])
   _ : _ -> Nothing
 
--- | Filter the parsing results by a predicate
 filter :: (a -> Bool) -> Parser a -> Parser a
 filter f p = P $ \s -> do
   (c, cs) <- doParse p s

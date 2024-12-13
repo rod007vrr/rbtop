@@ -8,7 +8,7 @@ module MemoryCollector
 where
 
 import Control.Applicative
-import Parser (Parser (..))
+import Parser (Parser)
 import Parser qualified as P
 import System.Process (readProcess)
 import Prelude hiding (filter)
@@ -50,7 +50,7 @@ data RawMemory = RawMemory
 getRawMemoryData :: IO String
 getRawMemoryData = readProcess "memory_pressure" [] ""
 
-processMemoryData :: P.Parser RawMemory
+processMemoryData :: Parser RawMemory
 processMemoryData =
   RawMemory
     <$> (P.string "The system has " *> P.int <* P.string " (")

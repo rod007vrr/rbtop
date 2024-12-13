@@ -29,7 +29,6 @@ library
       Parser
   other-modules:
       ConfigState
-      Lib
       MemoryCollector
       ProcessCollector
       SystemState
@@ -74,7 +73,6 @@ test-suite rbtop-test
       UIManagerTest
       ConfigState
       CPUCollector
-      Lib
       MemoryCollector
       Parser
       ProcessCollector
