@@ -13,9 +13,7 @@ import System.Process (readProcess)
 import Prelude hiding (filter)
 
 data ProcessedMemory = ProcessedMemory
-  { -- | Unix timestamp when memory was sampled
-    timestamp :: Int,
-    -- | Total system memory in bytes
+  { -- | Total system memory in bytes
     totalMem :: Int,
     -- | Used memory in bytes
     usedMem :: Int,
@@ -80,3 +78,19 @@ printRawMemoryStats = do
   case P.parse processMemoryData rawData of
     Right rawMemory -> print rawMemory
     Left err -> putStrLn err
+
+-- | Convert RawMemory to ProcessedMemory
+toProcessedMemory :: RawMemory -> ProcessedMemory
+toProcessedMemory raw = ProcessedMemory 
+  { totalMem = totalMemSize raw
+  , freeMem = freePages raw * pageSize raw
+  , usedMem = totalMemSize raw - (freePages raw * pageSize raw)
+  }
+
+-- | Get processed memory statistics
+getProcessedMemory :: IO (Either String ProcessedMemory)
+getProcessedMemory = do
+  rawData <- getRawMemoryData
+  case P.parse processMemoryData rawData of
+    Right rawMemory -> return $ Right $ toProcessedMemory rawMemory
+    Left err -> return $ Left err
