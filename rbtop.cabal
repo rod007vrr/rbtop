@@ -27,10 +27,10 @@ library
   exposed-modules:
       CPUCollector
       Parser
+      ProcessCollector
   other-modules:
       ConfigState
       MemoryCollector
-      ProcessCollector
       SystemState
       UIManager
       Paths_rbtop
