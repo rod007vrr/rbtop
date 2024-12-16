@@ -2,7 +2,6 @@
 
 module MemoryCollector
   ( ProcessedMemory (..),
-    ProcessedMemoryList,
     printRawMemoryStats,
   )
 where
@@ -24,8 +23,6 @@ data ProcessedMemory = ProcessedMemory
     freeMem :: Int
   }
   deriving (Show, Eq)
-
-type ProcessedMemoryList = [ProcessedMemory]
 
 data RawMemory = RawMemory
   { totalMemSize :: Int, -- in bytes

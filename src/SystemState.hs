@@ -5,14 +5,16 @@ where
 
 import CPUCollector (ProcessedCPU)
 import MemoryCollector (ProcessedMemory)
-import ProcessCollector (Process)
+import ProcessCollector (ProcessList)
 
 -- | Combined system state data
 data SystemState = SystemState
-  { -- | Memory statistics
+  { -- | timestamp
+    time :: Integer,
+    -- | Memory statistics
     memoryStats :: ProcessedMemory,
     -- | CPU statistics
     cpuStats :: ProcessedCPU,
     -- | List of process information
-    processStats :: [Process]
+    processStats :: ProcessList
   }
