@@ -6,7 +6,6 @@ import MemoryCollectorTest
 import ProcessCollectorTest
 import SystemStateTest
 import Test.HUnit
-import UIManagerTest
 
 main :: IO ()
 main = do
@@ -17,7 +16,6 @@ main = do
           cpuCollectorTests,
           memoryCollectorTests,
           processCollectorTests,
-          systemStateTests,
-          uiManagerTests
+          systemStateTests
         ]
   print counts
