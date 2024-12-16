@@ -1,6 +1,6 @@
 module Main (main) where
 
-import UI
+import UI.UIManager
 
 main :: IO ()
 main = ui
