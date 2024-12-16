@@ -15,9 +15,7 @@ import System.Process
 import Prelude hiding (filter)
 
 data ProcessedCPU = ProcessedCPU
-  { -- |  timestamp when CPU was sampled
-    timestamp :: Integer,
-    -- | CPU usage percentage
+  { -- | CPU usage percentage
     totalUsage :: Double,
     -- | User space CPU usage percentage
     userUsage :: Double,
@@ -50,7 +48,12 @@ processRawCPUData =
 
 rawToFull :: RawCPU -> ProcessedCPU
 rawToFull r =
-  ProcessedCPU 0 (user r + sys r) (user r) (sys r) (idle r)
+  ProcessedCPU (user r + sys r) (user r) (sys r) (idle r)
+
+getCPUStats :: IO (Either String ProcessedCPU)
+getCPUStats = do
+  rawData <- getRawCPUData
+  return $ rawToFull <$> P.parse processRawCPUData rawData
 
 -- | Run and print raw CPU stats
 printRawCPUStats :: IO ()
