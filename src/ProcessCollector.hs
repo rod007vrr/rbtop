@@ -11,6 +11,7 @@ module ProcessCollector
     processListP,
     printProcessList,
     getProcessList,
+    sampleProcesses,
   )
 where
 
@@ -45,6 +46,16 @@ data Process = Process
     cmd :: String
   }
   deriving (Show, Eq)
+
+-- Sample process data
+sampleProcesses :: [Process]
+sampleProcesses =
+  [ Process "root" 1 0.0 0.1 12345 2048 "??" "S" "Apr10" "0:01" "/sbin/init",
+    Process "alice" 1234 25.3 5.2 45678 8192 "ttys001" "R+" "10:30" "1:23" "firefox",
+    Process "bob" 2345 15.7 3.8 34567 4096 "ttys002" "S+" "11:45" "0:45" "chrome",
+    Process "daemon" 321 0.5 0.3 23456 1024 "??" "Ss" "Apr09" "0:30" "/usr/sbin/cron",
+    Process "www-data" 3456 8.2 2.1 56789 3072 "??" "S" "12:15" "2:10" "nginx: worker"
+  ]
 
 getRawProcessData :: IO String
 getRawProcessData = readProcess "ps" ["aux"] ""
