@@ -5,6 +5,7 @@ module CPUCollector
     ProcessedCPUList,
     getRawCPUData,
     printRawCPUStats,
+    getProcessedCPU,
   )
 where
 
@@ -50,10 +51,12 @@ rawToFull :: RawCPU -> ProcessedCPU
 rawToFull r =
   ProcessedCPU (user r + sys r) (user r) (sys r) (idle r)
 
-getCPUStats :: IO (Either String ProcessedCPU)
-getCPUStats = do
+getProcessedCPU :: IO (Maybe ProcessedCPU)
+getProcessedCPU = do
   rawData <- getRawCPUData
-  return $ rawToFull <$> P.parse processRawCPUData rawData
+  case P.parse processRawCPUData rawData of
+    Right rawCpu -> return $ Just (rawToFull rawCpu)
+    Left _ -> return Nothing
 
 -- | Run and print raw CPU stats
 printRawCPUStats :: IO ()

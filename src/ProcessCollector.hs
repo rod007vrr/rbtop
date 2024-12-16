@@ -36,11 +36,6 @@ sampleProcesses =
 
 type ProcessList = [Process]
 
-data ProcessListAtTime = ProcessListAtTime
-  { processes :: ProcessList,
-    systemTime :: String
-  }
-
 data Process = Process
   { user :: String,
     pid :: Int,
@@ -62,19 +57,19 @@ getRawProcessData :: IO String
 getRawProcessData = readProcess "ps" ["aux"] ""
 
 -- | Attempts to parse raw process data and returns Either an error message or ProcessList
-parseProcessData :: String -> Either String ProcessList
+parseProcessData :: String -> Maybe ProcessList
 parseProcessData rawData =
   case P.parse processListP rawData of
-    Right procs -> Right procs
-    Left err -> Left $ "Failed to parse process data: " ++ show err
+    Right procs -> Just procs
+    Left _ -> Nothing
 
 -- | Gets process list from system and returns Either an error message or ProcessList
-getProcessList :: IO (Either String ProcessList)
+getProcessList :: IO (Maybe ProcessList)
 getProcessList = parseProcessData <$> getRawProcessData
 
 -- | Print the process list to stdout
 printProcessList :: ProcessList -> IO ()
-printProcessList procList = mapM_ print (procList)
+printProcessList = mapM_ print
 
 -- Parser for a single process line
 processLineP :: Parser Process

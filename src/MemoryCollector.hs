@@ -3,6 +3,7 @@
 module MemoryCollector
   ( ProcessedMemory (..),
     printRawMemoryStats,
+    getProcessedMemory,
   )
 where
 
@@ -81,16 +82,17 @@ printRawMemoryStats = do
 
 -- | Convert RawMemory to ProcessedMemory
 toProcessedMemory :: RawMemory -> ProcessedMemory
-toProcessedMemory raw = ProcessedMemory 
-  { totalMem = totalMemSize raw
-  , freeMem = freePages raw * pageSize raw
-  , usedMem = totalMemSize raw - (freePages raw * pageSize raw)
-  }
+toProcessedMemory raw =
+  ProcessedMemory
+    { totalMem = totalMemSize raw,
+      freeMem = freePages raw * pageSize raw,
+      usedMem = totalMemSize raw - (freePages raw * pageSize raw)
+    }
 
 -- | Get processed memory statistics
-getProcessedMemory :: IO (Either String ProcessedMemory)
+getProcessedMemory :: IO (Maybe ProcessedMemory)
 getProcessedMemory = do
   rawData <- getRawMemoryData
   case P.parse processMemoryData rawData of
-    Right rawMemory -> return $ Right $ toProcessedMemory rawMemory
-    Left err -> return $ Left err
+    Right rawMemory -> return $ Just $ toProcessedMemory rawMemory
+    Left _ -> return Nothing

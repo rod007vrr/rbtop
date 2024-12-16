@@ -1,16 +1,17 @@
 module SystemState
   ( SystemState (..),
+    gatherSystemState,
   )
 where
 
-import CPUCollector (ProcessedCPU)
-import MemoryCollector (ProcessedMemory)
-import ProcessCollector (ProcessList)
+import CPUCollector (ProcessedCPU, getProcessedCPU)
+import Control.Applicative
+import MemoryCollector (ProcessedMemory, getProcessedMemory)
+import ProcessCollector (ProcessList, getProcessList)
 
 -- | Combined system state data
 data SystemState = SystemState
   { -- | timestamp
-    time :: Integer,
     -- | Memory statistics
     memoryStats :: ProcessedMemory,
     -- | CPU statistics
@@ -18,3 +19,10 @@ data SystemState = SystemState
     -- | List of process information
     processStats :: ProcessList
   }
+
+gatherSystemState :: IO (Maybe SystemState)
+gatherSystemState =
+  liftA3 SystemState
+    <$> getProcessedMemory
+    <*> getProcessedCPU
+    <*> getProcessList
