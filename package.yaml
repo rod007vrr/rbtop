@@ -30,6 +30,7 @@ dependencies:
   - vty-crossplatform
   - random
   - vector
+  - mtl
 
 ghc-options:
   - -Wall
@@ -45,10 +46,10 @@ ghc-options:
 library:
   source-dirs: src
   # exposed-modules:
-    # - CPUCollector
-    # - Parser
-    # - ProcessCollector
-    # - UI.UIManager
+  # - CPUCollector
+  # - Parser
+  # - ProcessCollector
+  # - UI.UIManager
 
 executables:
   rbtop-exe:

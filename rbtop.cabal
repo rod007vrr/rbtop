@@ -46,6 +46,7 @@ library
       QuickCheck
     , base >=4.7 && <5
     , brick >=1.0
+    , mtl
     , process
     , random
     , split
@@ -68,6 +69,7 @@ executable rbtop-exe
       QuickCheck
     , base >=4.7 && <5
     , brick >=1.0
+    , mtl
     , process
     , random
     , rbtop
@@ -110,6 +112,7 @@ test-suite rbtop-test
     , QuickCheck
     , base >=4.7 && <5
     , brick >=1.0
+    , mtl
     , process
     , random
     , rbtop
