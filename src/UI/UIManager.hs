@@ -168,7 +168,22 @@ sortProcessList sortCol = case sortCol of
 renderTable :: UIState -> Widget ResourceName
 renderTable s = tableWidget headers rows
   where
-    headers = ["(p)PID", "(o)Command", "(c)CPU %", "(m)Memory %", "(v)VSZ", "(r)RSS", "(t)TTY", "(a)STAT", "(b)Started", "(i)Time", "(u)User"]
+    headers =
+      map
+        addSortMarker
+        [ ("(p)PID", SortPID),
+          ("(o)Command", SortCommand),
+          ("(c)CPU %", SortCPU),
+          ("(m)Memory %", SortMem),
+          ("(v)VSZ", SortVSZ),
+          ("(r)RSS", SortRSS),
+          ("(t)TTY", SortTTY),
+          ("(a)STAT", SortStat),
+          ("(b)Started", SortStarted),
+          ("(i)Time", SortTime),
+          ("(u)User", SortUser)
+        ]
+    addSortMarker (header, col) = if col == tableSort s then "*" ++ header else header
     rows = map makeRow (sortProcessList (tableSort s) (processStats $ systemState s))
 
 -- renderGraph :: GraphData -> Widget ResourceName
