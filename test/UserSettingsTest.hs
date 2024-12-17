@@ -20,7 +20,7 @@ userSettingsTests =
 testSaveLoadSettings :: Test
 testSaveLoadSettings =
   TestCase $ do
-    let settings = UserSettings SortPID CpuPct
+    let settings = UserSettings SortPID CpuPct LeftRight
     withSystemTempFile "settings.txt" $ \path handle -> do
       hClose handle
       saveUserSettings settings path
@@ -31,7 +31,7 @@ testParseUserSettings :: Test
 testParseUserSettings =
   TestCase $ do
     let input = "tableSort=SortPID\nselectedGraph=CpuPct"
-        expected = UserSettings SortPID CpuPct
+        expected = UserSettings SortPID CpuPct LeftRight
     case parse userSettingsP input of
       Left err -> assertFailure $ "Failed to parse valid settings: " ++ show err
       Right actual -> assertEqual "Parsed settings should match expected" expected actual
