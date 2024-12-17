@@ -5,6 +5,7 @@ import Brick.Widgets.Border (border, hBorder)
 import Brick.Widgets.Center (hCenter)
 
 type Header = [String]
+
 type Row = [String]
 
 -- | Render a table widget with headers and rows.

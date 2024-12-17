@@ -20,15 +20,47 @@ import Brick.Widgets.Core
 import Control.Concurrent (forkIO, threadDelay)
 import Control.Monad (forever, void, when)
 import Control.Monad.IO.Class (liftIO)
+import Data.Function
+import Data.List (break, drop, sortBy)
 import Data.List.Split
 import qualified Data.Vector.Unboxed as V
 import Graphics.Vty (Event (EvKey), Key (KChar), blue, defAttr, eventChannel)
 import qualified Graphics.Vty as V
 import qualified Graphics.Vty.CrossPlatform as V
-import ProcessCollector (Process (..))
+import ProcessCollector (Process (..), ProcessList)
 import SystemState (SystemState (..), gatherSystemState)
 import UI.Graph (GraphData (points, processId), renderThinBar)
 import UI.Table (tableWidget)
+
+headerAttr :: AttrName
+headerAttr = attrName "header"
+
+type ResourceName = String
+
+data SortColumn
+  = SortPID
+  | SortCommand
+  | SortCPU
+  | SortMem
+  | SortVSZ
+  | SortRSS
+  | SortTTY
+  | SortStat
+  | SortStarted
+  | SortTime
+  | SortUser
+  deriving (Show, Eq)
+
+data UIState = UIState
+  { systemState :: SystemState,
+    cpuGraphData :: Maybe GraphData,
+    memGraphData :: Maybe GraphData,
+    awaitingKey :: Bool,
+    tableSort :: SortColumn
+  }
+  deriving (Show, Eq)
+
+data CustomEvent = Tick
 
 ui :: IO ()
 ui = do
@@ -54,14 +86,16 @@ buildInitialState = do
         { systemState = sysState,
           cpuGraphData = Nothing,
           memGraphData = Nothing,
-          awaitingKey = False
+          awaitingKey = False,
+          tableSort = SortCPU
         }
     Nothing ->
       UIState
         { systemState = emptySystemState,
           cpuGraphData = Nothing,
           memGraphData = Nothing,
-          awaitingKey = False
+          awaitingKey = False,
+          tableSort = SortCPU
         }
   where
     -- Placeholder empty state when we can't get system data
@@ -72,18 +106,6 @@ buildInitialState = do
           processStats = []
         }
 
-type ResourceName = String
-
-data UIState = UIState
-  { systemState :: SystemState,
-    cpuGraphData :: Maybe GraphData,
-    memGraphData :: Maybe GraphData,
-    awaitingKey :: Bool
-  }
-  deriving (Show, Eq)
-
-data CustomEvent = Tick
-
 app :: App UIState CustomEvent ResourceName
 app =
   App
@@ -93,9 +115,6 @@ app =
       appStartEvent = return (),
       appAttrMap = const $ attrMap defAttr [(headerAttr, bg blue)]
     }
-
-headerAttr :: AttrName
-headerAttr = attrName "header"
 
 drawUI :: UIState -> [Widget ResourceName]
 drawUI s =
@@ -132,11 +151,25 @@ makeRow p =
     user p
   ]
 
+sortProcessList :: SortColumn -> ProcessList -> ProcessList
+sortProcessList sortCol = case sortCol of
+  SortPID -> sortBy (compare `on` pid)
+  SortCommand -> sortBy (compare `on` cmd)
+  SortCPU -> sortBy (flip compare `on` (read . show . cpuPct :: Process -> Double))
+  SortMem -> sortBy (flip compare `on` (read . show . memPct :: Process -> Double))
+  SortVSZ -> sortBy (flip compare `on` vsz)
+  SortRSS -> sortBy (flip compare `on` rss)
+  SortTTY -> sortBy (compare `on` tt)
+  SortStat -> sortBy (compare `on` stat)
+  SortStarted -> sortBy (compare `on` started)
+  SortTime -> sortBy (compare `on` time)
+  SortUser -> sortBy (compare `on` user)
+
 renderTable :: UIState -> Widget ResourceName
 renderTable s = tableWidget headers rows
   where
-    headers = ["PID", "Command", "CPU %", "Memory %", "VSZ", "RSS", "TTY", "STAT", "Started", "Time", "User"]
-    rows = map makeRow (processStats $ systemState s)
+    headers = ["(p)PID", "(o)Command", "(c)CPU %", "(m)Memory %", "(v)VSZ", "(r)RSS", "(t)TTY", "(a)STAT", "(b)Started", "(i)Time", "(u)User"]
+    rows = map makeRow (sortProcessList (tableSort s) (processStats $ systemState s))
 
 -- renderGraph :: GraphData -> Widget ResourceName
 -- renderGraph graphData =
@@ -156,6 +189,19 @@ handleEvent e = case e of
         s <- get
         when (awaitingKey s) $ do
           liftIO $ putStrLn $ "You pressed: " ++ [c]
+          case c of
+            'p' -> modify $ \s' -> s' {tableSort = SortPID}
+            'o' -> modify $ \s' -> s' {tableSort = SortCommand}
+            'c' -> modify $ \s' -> s' {tableSort = SortCPU}
+            'm' -> modify $ \s' -> s' {tableSort = SortMem}
+            'v' -> modify $ \s' -> s' {tableSort = SortVSZ}
+            'r' -> modify $ \s' -> s' {tableSort = SortRSS}
+            't' -> modify $ \s' -> s' {tableSort = SortTTY}
+            'a' -> modify $ \s' -> s' {tableSort = SortStat}
+            'b' -> modify $ \s' -> s' {tableSort = SortStarted}
+            'i' -> modify $ \s' -> s' {tableSort = SortTime}
+            'u' -> modify $ \s' -> s' {tableSort = SortUser}
+            _ -> return ()
           modify $ \s' -> s' {awaitingKey = False}
       _ -> return ()
   AppEvent Tick -> do
