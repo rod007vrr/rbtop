@@ -108,14 +108,14 @@ drawUI s =
       ]
   ]
 
-legendBox :: Widget ResourceName
-legendBox =
-  borderWithLabel (str "Controls") $
-    vBox
-      [ str "q - quit",
-        str "s - sort",
-        str "g - show graph"
-      ]
+-- legendBox :: Widget ResourceName
+-- legendBox =
+--   borderWithLabel (str "Controls") $
+--     vBox
+--       [ str "q - quit",
+--         str "s - sort",
+--         str "g - show graph"
+--       ]
 
 makeRow :: Process -> [String]
 makeRow p =
