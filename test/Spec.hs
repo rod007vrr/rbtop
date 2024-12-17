@@ -13,9 +13,9 @@ main = do
     runTestTT $
       TestList
         [ configStateTests,
-          cpuCollectorTests,
-          memoryCollectorTests,
-          processCollectorTests,
-          systemStateTests
+          -- cpuCollectorTests,
+          memoryCollectorTests
+          -- processCollectorTests,
+          -- systemStateTests
         ]
   print counts

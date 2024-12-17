@@ -25,16 +25,17 @@ source-repository head
 
 library
   exposed-modules:
+      ConfigState
       CPUCollector
+      MemoryCollector
       Parser
       ProcessCollector
-      UI.UIManager
-  other-modules:
-      ConfigState
-      MemoryCollector
       SystemState
       UI.Graph
       UI.Table
+      UI.UIManager
+      UserSettings
+  other-modules:
       Paths_rbtop
   autogen-modules:
       Paths_rbtop
@@ -86,6 +87,7 @@ test-suite rbtop-test
       MemoryCollectorTest
       ProcessCollectorTest
       SystemStateTest
+      UserSettingsTest
       ConfigState
       CPUCollector
       MemoryCollector
@@ -95,6 +97,7 @@ test-suite rbtop-test
       UI.Graph
       UI.Table
       UI.UIManager
+      UserSettings
       Paths_rbtop
   autogen-modules:
       Paths_rbtop
@@ -111,6 +114,7 @@ test-suite rbtop-test
     , random
     , rbtop
     , split
+    , temporary
     , text
     , vector
     , vty >=6.0

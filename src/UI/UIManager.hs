@@ -31,32 +31,20 @@ import ProcessCollector (Process (..), ProcessList)
 import SystemState (SystemState (..), gatherSystemState)
 import UI.Graph (GraphData (points, processId), renderThinBar)
 import UI.Table (tableWidget)
+import UserSettings (GraphOptions (..), SortColumn (..))
 
 headerAttr :: AttrName
 headerAttr = attrName "header"
 
 type ResourceName = String
 
-data SortColumn
-  = SortPID
-  | SortCommand
-  | SortCPU
-  | SortMem
-  | SortVSZ
-  | SortRSS
-  | SortTTY
-  | SortStat
-  | SortStarted
-  | SortTime
-  | SortUser
-  deriving (Show, Eq)
-
 data UIState = UIState
   { systemState :: SystemState,
     cpuGraphData :: Maybe GraphData,
     memGraphData :: Maybe GraphData,
     awaitingKey :: Bool,
-    tableSort :: SortColumn
+    tableSort :: SortColumn,
+    selectedGraph :: GraphOptions
   }
   deriving (Show, Eq)
 
@@ -87,7 +75,8 @@ buildInitialState = do
           cpuGraphData = Nothing,
           memGraphData = Nothing,
           awaitingKey = False,
-          tableSort = SortCPU
+          tableSort = SortCPU,
+          selectedGraph = CpuPct
         }
     Nothing ->
       UIState
@@ -95,7 +84,8 @@ buildInitialState = do
           cpuGraphData = Nothing,
           memGraphData = Nothing,
           awaitingKey = False,
-          tableSort = SortCPU
+          tableSort = SortCPU,
+          selectedGraph = CpuPct
         }
   where
     -- Placeholder empty state when we can't get system data
