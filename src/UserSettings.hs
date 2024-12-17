@@ -3,6 +3,7 @@
 module UserSettings
   ( SortColumn (..),
     GraphOptions (..),
+    PaneOrientation (..),
     UserSettings (..),
     saveUserSettings,
     loadUserSettings,
@@ -33,9 +34,17 @@ data GraphOptions
   | MemPct
   deriving (Show, Eq, Read)
 
+data PaneOrientation
+  = LeftRight
+  | RightLeft
+  | TopBottom
+  | BottomTop
+  deriving (Show, Eq, Read)
+
 data UserSettings = UserSettings
   { savedTableSort :: SortColumn,
-    savedSelectedGraph :: GraphOptions
+    savedSelectedGraph :: GraphOptions,
+    savedOrientation :: PaneOrientation
   }
   deriving (Show, Eq)
 
@@ -59,13 +68,16 @@ userSettingsP =
     <$> readSettingP "tableSort"
     <* many (P.char '\n')
     <*> readSettingP "selectedGraph"
+    <* many (P.char '\n')
+    <*> readSettingP "orientation"
 
 saveUserSettings :: UserSettings -> FilePath -> IO ()
 saveUserSettings settings path = do
   let contents =
         unlines
           [ "tableSort=" ++ show (savedTableSort settings),
-            "selectedGraph=" ++ show (savedSelectedGraph settings)
+            "selectedGraph=" ++ show (savedSelectedGraph settings),
+            "orientation=" ++ show (savedOrientation settings)
           ]
   writeFile path contents
 

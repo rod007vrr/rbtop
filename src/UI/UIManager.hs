@@ -29,7 +29,7 @@ import Control.Monad.State
 import Data.Function
 import Data.List (break, drop, sortBy)
 import Data.List.Split
-import qualified Data.Maybe
+import Data.Maybe (fromMaybe)
 import qualified Data.Vector.Unboxed as V
 import Graphics.Vty (Event (EvKey), Key (KChar, KDown, KLeft, KRight, KUp), blue, defAttr, eventChannel)
 import qualified Graphics.Vty as V
@@ -41,8 +41,9 @@ import UI.Graph (GraphData (GraphData, maxPoints, points), renderThinBar)
 import UI.Table (tableWidget)
 import UserSettings
   ( GraphOptions (..),
+    PaneOrientation (..),
     SortColumn (..),
-    UserSettings (UserSettings, savedSelectedGraph, savedTableSort),
+    UserSettings (UserSettings, savedOrientation, savedSelectedGraph, savedTableSort),
     loadUserSettings,
     saveUserSettings,
   )
@@ -54,11 +55,6 @@ userSettingsFile :: String
 userSettingsFile = "settings.txt"
 
 type ResourceName = String
-
--- data PaneFocus = ProcessesPane | LegendPane | MemGraphPane | CPUGraphPane
---   deriving (Eq, Show)
-
-data PaneOrientation = LeftRight | RightLeft | TopBottom | BottomTop deriving (Show, Eq)
 
 data UIState = UIState
   { systemState :: SystemState,
@@ -94,13 +90,13 @@ buildInitialState = do
   maybeSystemState <- gatherSystemState
   pure $
     UIState
-      { systemState = maybe emptySystemState id maybeSystemState,
+      { systemState = fromMaybe emptySystemState maybeSystemState,
         cpuGraphData = Nothing,
         memGraphData = Nothing,
         awaitingKey = False,
         tableSort = maybe SortCPU savedTableSort settings,
         selectedGraph = maybe CpuPct savedSelectedGraph settings,
-        orientation = LeftRight
+        orientation = maybe LeftRight savedOrientation settings
       }
   where
     -- Placeholder empty state when we can't get system data
@@ -262,7 +258,7 @@ handleEvent e = case e of
         s <- get
         liftIO $
           saveUserSettings
-            (UserSettings (tableSort s) (selectedGraph s))
+            (UserSettings (tableSort s) (selectedGraph s) (orientation s))
             userSettingsFile
         halt
       V.EvKey (V.KChar 's') [] ->
