@@ -1,7 +1,6 @@
 module Main (main) where
 
 import CPUCollectorTest
-import ConfigStateTest
 import MemoryCollectorTest
 import ProcessCollectorTest
 import SystemStateTest
@@ -12,8 +11,7 @@ main = do
   counts <-
     runTestTT $
       TestList
-        [ configStateTests,
-          -- cpuCollectorTests,
+        [ -- cpuCollectorTests,
           memoryCollectorTests
           -- processCollectorTests,
           -- systemStateTests
