@@ -20,10 +20,12 @@ extra-source-files:
 description: Please see the README on GitHub at <https://github.com/githubuser/rbtop#readme>
 
 dependencies:
-    - base >= 4.7 && < 5
-    - QuickCheck
+  - base >= 4.7 && < 5
+  - split
+  - text
+  - QuickCheck
   - process
-  - brick
+  - brick >= 1.0
   - vty >= 6.0
   - vty-crossplatform
   - random
@@ -46,6 +48,7 @@ library:
     - CPUCollector
     - Parser
     - ProcessCollector
+    - UI.UIManager
 
 executables:
   rbtop-exe:

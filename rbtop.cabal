@@ -28,14 +28,13 @@ library
       CPUCollector
       Parser
       ProcessCollector
+      UI.UIManager
   other-modules:
       ConfigState
       MemoryCollector
       SystemState
       UI.Graph
       UI.Table
-      UI.UIManager
-  other-modules:
       Paths_rbtop
   autogen-modules:
       Paths_rbtop
@@ -45,9 +44,11 @@ library
   build-depends:
       QuickCheck
     , base >=4.7 && <5
+    , brick >=1.0
     , process
-    , brick
     , random
+    , split
+    , text
     , vector
     , vty >=6.0
     , vty-crossplatform
@@ -65,10 +66,12 @@ executable rbtop-exe
   build-depends:
       QuickCheck
     , base >=4.7 && <5
-    , brick
-    , random
+    , brick >=1.0
     , process
+    , random
     , rbtop
+    , split
+    , text
     , vector
     , vty >=6.0
     , vty-crossplatform
@@ -83,14 +86,15 @@ test-suite rbtop-test
       MemoryCollectorTest
       ProcessCollectorTest
       SystemStateTest
-      UIManagerTest
       ConfigState
       CPUCollector
       MemoryCollector
       Parser
       ProcessCollector
       SystemState
-      UIManager
+      UI.Graph
+      UI.Table
+      UI.UIManager
       Paths_rbtop
   autogen-modules:
       Paths_rbtop
@@ -102,10 +106,12 @@ test-suite rbtop-test
       HUnit
     , QuickCheck
     , base >=4.7 && <5
+    , brick >=1.0
     , process
-    , brick
     , random
     , rbtop
+    , split
+    , text
     , vector
     , vty >=6.0
     , vty-crossplatform

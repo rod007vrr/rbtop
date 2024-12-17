@@ -1,102 +1,158 @@
-module UI.UIManager where
+{-# OPTIONS_GHC -Wno-unused-imports #-}
 
-import Brick.Main
-import Brick.Types ( EventM, BrickEvent(VtyEvent), Widget )
-import Brick.AttrMap
-import Graphics.Vty
-import Brick.Util
+module UI.UIManager (ui) where
+
+import Brick (customMain)
+import Brick.AttrMap (AttrName, attrMap, attrName)
+import Brick.BChan (BChan, newBChan, writeBChan)
+import Brick.Main (App (..), defaultMain, halt, neverShowCursor)
+import Brick.Types (BrickEvent (AppEvent, VtyEvent), EventM, Widget, modify)
+import Brick.Util (bg)
+import Brick.Widgets.Border (borderWithLabel)
 import Brick.Widgets.Core
-import Brick.Widgets.Center
-import Brick.Widgets.Border
-import UI.Graph
-import UI.Table (tableWidget)
+  ( Padding (Pad),
+    hBox,
+    padLeft,
+    padRight,
+    str,
+    vBox,
+  )
+import Control.Concurrent (forkIO, threadDelay)
+import Control.Monad (forever, void)
+import Control.Monad.IO.Class (liftIO)
+import Data.List.Split
 import qualified Data.Vector.Unboxed as V
-
-
+import Graphics.Vty (Event (EvKey), Key (KChar), blue, defAttr, eventChannel)
+import qualified Graphics.Vty as V
+import qualified Graphics.Vty.CrossPlatform as V
+import ProcessCollector (Process (..))
+import SystemState (SystemState (..), gatherSystemState)
+import UI.Graph (GraphData (points, processId), renderThinBar)
+import UI.Table (tableWidget)
 
 ui :: IO ()
 ui = do
-    initialState <- buildInitialState
-    endState <- defaultMain (app :: App UIState e ResourceName) initialState
-    print endState
+  chan <- newBChan 10
+  void $ forkIO $ forever $ do
+    writeBChan chan Tick
+    threadDelay 1000000 -- 1 second delay
+  initialState <- buildInitialState
+
+  let buildVty = V.mkVty V.defaultConfig
+  initialVty <- buildVty
+
+  endState <- customMain initialVty buildVty (Just chan) (app chan) initialState
+
+  print endState
 
 buildInitialState :: IO UIState
 buildInitialState = do
-    initialGraph <- initializeGraph 1
-    pure UIState {processData = mockData, cpuGraphData = Just initialGraph}
-
-data Process = Process {
-    pid :: Int,
-    name :: String,
-    cpuPercent :: Double,
-    memoryPercent :: Double
-} deriving (Show, Eq)
-
-mockData :: [Process]
-mockData = [
-    Process { pid = 1, name = "bash", cpuPercent = 0.1, memoryPercent = 0.2 },
-    Process { pid = 2, name = "vim", cpuPercent = 0.3, memoryPercent = 0.4 },
-    Process { pid = 3, name = "emacs", cpuPercent = 0.5, memoryPercent = 0.6 },
-    Process { pid = 4, name = "less", cpuPercent = 0.7, memoryPercent = 0.8 },
-    Process { pid = 5, name = "top", cpuPercent = 0.9, memoryPercent = 1.0 },
-    Process { pid = 6, name = "htop", cpuPercent = 1.1, memoryPercent = 1.2 }
-    ]
+  maybeSystemState <- gatherSystemState
+  pure $ case maybeSystemState of
+    Just sysState ->
+      UIState
+        { systemState = sysState,
+          cpuGraphData = Nothing,
+          memGraphData = Nothing
+        }
+    Nothing ->
+      UIState
+        { systemState = emptySystemState,
+          cpuGraphData = Nothing,
+          memGraphData = Nothing
+        }
+  where
+    -- Placeholder empty state when we can't get system data
+    emptySystemState =
+      SystemState
+        { memoryStats = error "No memory stats available",
+          cpuStats = error "No CPU stats available",
+          processStats = []
+        }
 
 type ResourceName = String
 
 data UIState = UIState
-    { processData :: [Process],
+  { systemState :: SystemState,
     cpuGraphData :: Maybe GraphData,
-    memGraphData :: Maybe GraphData } deriving (Show, Eq)
+    memGraphData :: Maybe GraphData
+  }
+  deriving (Show, Eq)
 
-app :: App UIState e ResourceName
-app = App {
-    appDraw = drawUI,
-    appChooseCursor = neverShowCursor,
-    appHandleEvent = handleEvent,
-    appStartEvent = return (),
-    appAttrMap = const $ attrMap defAttr [(headerAttr, bg blue)]
-}
+data CustomEvent = Tick
+
+app :: BChan CustomEvent -> App UIState CustomEvent ResourceName
+app chan =
+  App
+    { appDraw = drawUI,
+      appChooseCursor = neverShowCursor,
+      appHandleEvent = handleEvent,
+      appStartEvent = return (),
+      appAttrMap = const $ attrMap defAttr [(headerAttr, bg blue)]
+    }
 
 headerAttr :: AttrName
 headerAttr = attrName "header"
 
 drawUI :: UIState -> [Widget ResourceName]
-drawUI s = [vBox
-    [ hBox
-        [ padRight (Pad 2) $ renderTable s
-        , legendBox
-        ]
-        , maybe emptyWidget renderGraph (cpuGraphData s)
-    ]]
+drawUI s =
+  [ vBox
+      [ hBox
+          [ padRight (Pad 2) $ renderTable s
+          -- legendBox
+          ]
+          -- maybe emptyWidget renderGraph (cpuGraphData s)
+      ]
+  ]
 
 legendBox :: Widget ResourceName
-legendBox = borderWithLabel (str "Controls") $
-    vBox [ str "q - quit"
-         , str "s - sort"
-         , str "g - show graph"
-         ]
+legendBox =
+  borderWithLabel (str "Controls") $
+    vBox
+      [ str "q - quit",
+        str "s - sort",
+        str "g - show graph"
+      ]
 
 makeRow :: Process -> [String]
-makeRow p = [show $ pid p, name p, show $ cpuPercent p, show $ memoryPercent p]
+makeRow p =
+  [ show (pid p),
+    last (splitOn "/" (cmd p)),
+    show (cpuPct p),
+    show (memPct p),
+    show (vsz p),
+    show (rss p),
+    tt p,
+    stat p,
+    started p,
+    time p,
+    user p
+  ]
 
 renderTable :: UIState -> Widget ResourceName
 renderTable s = tableWidget headers rows
-    where
-        headers = ["PID", "Name", "CPU %", "Memory %"]
-        rows = map makeRow (processData s)
+  where
+    headers = ["PID", "Command", "CPU %", "Memory %", "VSZ", "RSS", "TTY", "STAT", "Started", "Time", "User"]
+    rows = map makeRow (processStats $ systemState s)
 
-renderGraph :: GraphData -> Widget ResourceName
-renderGraph graphData =
-  let thinBars = map (`renderThinBar` 30) (V.toList (points graphData))
-  in borderWithLabel (str $ "CPU Usage - PID " ++ show (processId graphData)) $
-       hBox $ map (padLeft (Pad 0) . padRight (Pad 0)) thinBars
+-- renderGraph :: GraphData -> Widget ResourceName
+-- renderGraph graphData =
+--   let thinBars = map (`renderThinBar` 30) (V.toList (points graphData))
+--    in borderWithLabel (str $ "CPU Usage - PID " ++ show (processId graphData)) $
+--         hBox $
+--           map (padLeft (Pad 0) . padRight (Pad 0)) thinBars
 
-handleEvent :: BrickEvent n e -> EventM n UIState ()
+handleEvent :: BrickEvent ResourceName CustomEvent -> EventM ResourceName UIState ()
 handleEvent e = case e of
-    VtyEvent vtye ->
-        case vtye of
-            EvKey (KChar 'q') [] -> halt
-            _ -> return ()
-    _ -> return ()
-
+  VtyEvent vtye ->
+    case vtye of
+      V.EvKey (V.KChar 'q') [] -> halt
+      _ -> return ()
+  AppEvent Tick -> do
+    mNewState <- liftIO gatherSystemState
+    case mNewState of
+      Just newSysState ->
+        modify $ \s -> s {systemState = newSysState}
+      Nothing ->
+        return ()
+  _ -> return ()

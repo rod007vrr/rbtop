@@ -19,6 +19,7 @@ data SystemState = SystemState
     -- | List of process information
     processStats :: ProcessList
   }
+  deriving (Show, Eq)
 
 gatherSystemState :: IO (Maybe SystemState)
 gatherSystemState =
