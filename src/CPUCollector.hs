@@ -6,10 +6,13 @@ module CPUCollector
     getRawCPUData,
     printRawCPUStats,
     getProcessedCPU,
+    monitorCPU,
   )
 where
 
 import Control.Applicative
+import Control.Concurrent (threadDelay)
+import Control.Monad (forever)
 import Parser (Parser)
 import Parser qualified as P
 import System.Process
@@ -66,3 +69,13 @@ printRawCPUStats = do
   case P.parse processRawCPUData rawData of
     Right rawCpu -> print $ rawToFull rawCpu
     Left err -> putStrLn err
+
+monitorCPU :: IO ()
+monitorCPU = forever $ do
+  maybeMemory <- getProcessedCPU
+  case maybeMemory of
+    Just cpu -> do
+      print "FINAL PROCESSED!!!!!!!!!!!!"
+      print cpu
+    Nothing -> putStrLn "Failed to get memory stats"
+  threadDelay 1000000 -- 1 second delay
