@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-missing-export-lists #-}
+
 module UI.Graph where
 
 import Brick
@@ -14,7 +16,7 @@ data GraphData = GraphData
 
 -- Initialize a new graph with random data
 initializeGraph :: Int -> IO GraphData
-initializeGraph pid = do
+initializeGraph _ = do
   initialPoints <- replicateM 600 (randomRIO (0, 100)) -- Generate 600 points
   return
     GraphData
