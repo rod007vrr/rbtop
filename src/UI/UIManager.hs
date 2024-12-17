@@ -118,11 +118,16 @@ app =
     }
 
 drawUI :: UIState -> [Widget ResourceName]
-drawUI s = case orientation s of
-  LeftRight -> [hBox [processesPane s, additionalPane s]]
-  RightLeft -> [hBox [additionalPane s, processesPane s]]
-  TopBottom -> [vBox [additionalPane s, processesPane s]]
-  BottomTop -> [vBox [processesPane s, additionalPane s]]
+drawUI s =
+  [ vBox
+      [ legendBox s,
+        case orientation s of
+          LeftRight -> hBox [processesPane s, additionalPane s]
+          RightLeft -> hBox [additionalPane s, processesPane s]
+          TopBottom -> vBox [additionalPane s, processesPane s]
+          BottomTop -> vBox [processesPane s, additionalPane s]
+      ]
+  ]
 
 processesPane :: UIState -> Widget ResourceName
 processesPane = renderProcesses
@@ -131,50 +136,49 @@ additionalPane :: UIState -> Widget ResourceName
 additionalPane s = case orientation s of
   LeftRight ->
     vBox
-      [ legendBox,
-        padTop (Pad 1) $
+      [ padTop (Pad 1) $
           renderMemoryGraph s,
         padTop (Pad 1) $
           renderCPUGraph s
       ]
   RightLeft ->
     vBox
-      [ legendBox,
-        padTop (Pad 1) $
+      [ padTop (Pad 1) $
           renderMemoryGraph s,
         padTop (Pad 1) $
           renderCPUGraph s
       ]
   TopBottom ->
     hBox
-      [ legendBox,
-        padLeft (Pad 1) $
+      [ padLeft (Pad 1) $
           renderMemoryGraph s,
         padLeft (Pad 1) $
           renderCPUGraph s
       ]
   BottomTop ->
     hBox
-      [ legendBox,
-        padLeft (Pad 1) $
+      [ padLeft (Pad 1) $
           renderMemoryGraph s,
         padLeft (Pad 1) $
           renderCPUGraph s
       ]
 
-legendBox :: Widget ResourceName
-legendBox =
+legendBox :: UIState -> Widget ResourceName
+legendBox s =
   hLimit 100 $
     hCenter $
       borderWithLabel (str "Controls") $
-        vBox
-          [ str "q - Quit",
-            str "s - Sort processes",
-            str "← - Left",
-            str "→ - Right",
-            str "↑ - Up",
-            str "↓ - Down"
-          ]
+        if not $ awaitingKey s
+          then
+            hBox
+              [ str "q - Quit | ",
+                str "s - Sort processes | ",
+                str "← - Left | ",
+                str "→ - Right | ",
+                str "↑ - Up | ",
+                str "↓ - Down"
+              ]
+          else str "Awaiting sort key input"
 
 renderGraph :: GraphData -> Widget ResourceName
 renderGraph graphData =
