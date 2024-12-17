@@ -30,7 +30,7 @@ testSaveLoadSettings =
 testParseUserSettings :: Test
 testParseUserSettings =
   TestCase $ do
-    let input = "tableSort=SortPID\nselectedGraph=CpuPct"
+    let input = "tableSort=SortPID\nselectedGraph=CpuPct\norientation=LeftRight"
         expected = UserSettings SortPID CpuPct LeftRight
     case parse userSettingsP input of
       Left err -> assertFailure $ "Failed to parse valid settings: " ++ show err
