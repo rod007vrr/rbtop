@@ -86,7 +86,6 @@ test-suite rbtop-test
       CPUCollectorTest
       MemoryCollectorTest
       ProcessCollectorTest
-      SystemStateTest
       UserSettingsTest
       CPUCollector
       MemoryCollector

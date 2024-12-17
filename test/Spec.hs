@@ -3,7 +3,6 @@ module Main (main) where
 import CPUCollectorTest (cpuCollectorTests)
 import MemoryCollectorTest (memoryCollectorTests)
 import ProcessCollectorTest (processCollectorTests)
-import SystemStateTest
 import Test.HUnit
 import UserSettingsTest (userSettingsTests)
 
