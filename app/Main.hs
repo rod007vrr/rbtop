@@ -2,11 +2,7 @@
 
 module Main (main) where
 
-import Control.Concurrent (threadDelay)
-import Control.Monad (forever)
+import UI.UIManager
 
 main :: IO ()
-main = forever $ do
-  putStrLn "bruh"
-
-  threadDelay 1000000 -- 1 second
+main = ui
