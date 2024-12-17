@@ -1,19 +1,20 @@
 module Main (main) where
 
-import CPUCollectorTest
-import MemoryCollectorTest
-import ProcessCollectorTest
+import CPUCollectorTest (cpuCollectorTests)
+import MemoryCollectorTest (memoryCollectorTests)
+import ProcessCollectorTest (processCollectorTests)
 import SystemStateTest
 import Test.HUnit
+import UserSettingsTest (userSettingsTests)
 
 main :: IO ()
 main = do
   counts <-
     runTestTT $
       TestList
-        [ -- cpuCollectorTests,
-          memoryCollectorTests
-          -- processCollectorTests,
-          -- systemStateTests
+        [ userSettingsTests,
+          cpuCollectorTests,
+          memoryCollectorTests,
+          processCollectorTests
         ]
   print counts

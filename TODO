@@ -1,4 +1,11 @@
 !!!!FINAL TODO
+
+need tests for 
+- cpucollector
+- memorycollector
+- processcollector
+- systemState
+
 Testing:
 - more unit tests by manually feeding in the string
 - some form of prop based testing with some of these 

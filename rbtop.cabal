@@ -25,7 +25,6 @@ source-repository head
 
 library
   exposed-modules:
-      ConfigState
       CPUCollector
       MemoryCollector
       Parser
@@ -84,13 +83,11 @@ test-suite rbtop-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      ConfigStateTest
       CPUCollectorTest
       MemoryCollectorTest
       ProcessCollectorTest
       SystemStateTest
       UserSettingsTest
-      ConfigState
       CPUCollector
       MemoryCollector
       Parser
