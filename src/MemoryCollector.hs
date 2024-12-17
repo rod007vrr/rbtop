@@ -2,9 +2,12 @@
 
 module MemoryCollector
   ( ProcessedMemory (..),
+    RawMemory (..),
     printRawMemoryStats,
     getProcessedMemory,
     monitorMemory,
+    processMemoryData,
+    toProcessedMemory,
   )
 where
 
