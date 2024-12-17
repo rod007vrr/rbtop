@@ -1,12 +1,21 @@
+!!!!FINAL TODO
+Testing:
 - more unit tests by manually feeding in the string
 - some form of prop based testing with some of these 
 - generate the AST and print that out and add some space in the middle there and parse that in 
 make sure that we have the same values for everything there
-
 - test cases are a big deal!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 - make em work forreal
 
--few more days to make it a bit comprehensive
+To complete:
+- option for creating second pane, split vertically
+- sorting control for the panes
+- click button to show graph - for this we need to store the old cpu and memory history to ensure that shows up
+- write user settings to a file somewhere
+    - sorting order
+    - number of panes
+    - which graph by default
+    etc.
 
 
 really get testing up
