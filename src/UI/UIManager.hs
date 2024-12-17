@@ -34,7 +34,7 @@ import qualified Data.Vector.Unboxed as V
 import Graphics.Vty (Event (EvKey), Key (KChar, KDown, KLeft, KRight, KUp), blue, defAttr, eventChannel)
 import qualified Graphics.Vty as V
 import qualified Graphics.Vty.CrossPlatform as V
-import MemoryCollector (ProcessedMemory (totalMem, usedMem))
+import MemoryCollector (ProcessedMemory (freeMemPercent, totalMem, usedMem))
 import ProcessCollector (Process (..), ProcessList)
 import SystemState (SystemState (..), gatherSystemState)
 import UI.Graph (GraphData (GraphData, maxPoints, points), renderThinBar)
@@ -328,9 +328,7 @@ calculateCPUPercentage = totalUsage
 
 calculateMemoryPercentage :: ProcessedMemory -> Double
 calculateMemoryPercentage memStats =
-  let total = fromIntegral (totalMem memStats)
-      used = fromIntegral (usedMem memStats)
-   in if total > 0 then (used / total) * 100 else 0
+  100 - freeMemPercent memStats
 
 getOrInitGraph :: Maybe GraphData -> GraphData
 getOrInitGraph (Just graph) = graph

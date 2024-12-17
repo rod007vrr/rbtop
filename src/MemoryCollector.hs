@@ -4,10 +4,13 @@ module MemoryCollector
   ( ProcessedMemory (..),
     printRawMemoryStats,
     getProcessedMemory,
+    monitorMemory,
   )
 where
 
 import Control.Applicative
+import Control.Concurrent (threadDelay)
+import Control.Monad (forever)
 import Parser (Parser)
 import Parser qualified as P
 import System.Process (readProcess)
@@ -19,14 +22,15 @@ data ProcessedMemory = ProcessedMemory
     -- | Used memory in bytes
     usedMem :: Int,
     -- | Free memory in bytes
-    freeMem :: Int
+    freeMem :: Int,
+    freeMemPercent :: Double
   }
   deriving (Show, Eq)
 
 data RawMemory = RawMemory
   { totalMemSize :: Int, -- in bytes
-    pageSize :: Int, -- in bytes
     totalPages :: Int,
+    pageSize :: Int, -- in bytes
     freePages :: Int,
     purgeablePages :: Int,
     pagesPurged :: Int,
@@ -86,7 +90,8 @@ toProcessedMemory raw =
   ProcessedMemory
     { totalMem = totalMemSize raw,
       freeMem = freePages raw * pageSize raw,
-      usedMem = totalMemSize raw - (freePages raw * pageSize raw)
+      usedMem = totalMemSize raw - (freePages raw * pageSize raw),
+      freeMemPercent = memFreePercent raw
     }
 
 -- | Get processed memory statistics
@@ -94,5 +99,17 @@ getProcessedMemory :: IO (Maybe ProcessedMemory)
 getProcessedMemory = do
   rawData <- getRawMemoryData
   case P.parse processMemoryData rawData of
-    Right rawMemory -> return $ Just $ toProcessedMemory rawMemory
+    Right rawMemory -> do
+      return $ Just $ toProcessedMemory rawMemory
     Left _ -> return Nothing
+
+-- | Monitor memory usage by polling once per second
+monitorMemory :: IO ()
+monitorMemory = forever $ do
+  maybeMemory <- getProcessedMemory
+  case maybeMemory of
+    Just mem -> do
+      print "FINAL PROCESSED!!!!!!!!!!!!"
+      print mem
+    Nothing -> putStrLn "Failed to get memory stats"
+  threadDelay 1000000 -- 1 second delay
