@@ -15,11 +15,10 @@ module ProcessCollector
   )
 where
 
-import Control.Applicative
+import Control.Applicative (Alternative (many))
 import Data.Char qualified as Char
-import Data.Function
-import Data.List
--- import Data.Time.Clock
+import Data.Function (on)
+import Data.List (sortBy)
 import Parser (Parser)
 import Parser qualified as P
 import System.Process (readProcess)
@@ -51,12 +50,10 @@ data Process = Process
   }
   deriving (Show, Eq)
 
--- Sample process data
-
 getRawProcessData :: IO String
 getRawProcessData = readProcess "ps" ["aux"] ""
 
--- | Attempts to parse raw process data and returns Either an error message or ProcessList
+-- | Attempt to parse raw process data and returns Either an error message or ProcessList
 parseProcessData :: String -> Maybe ProcessList
 parseProcessData rawData =
   case P.parse processListP rawData of

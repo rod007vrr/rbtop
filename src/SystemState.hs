@@ -11,12 +11,8 @@ import ProcessCollector (ProcessList, getProcessList)
 
 -- | Combined system state data
 data SystemState = SystemState
-  { -- | timestamp
-    -- | Memory statistics
-    memoryStats :: ProcessedMemory,
-    -- | CPU statistics
+  { memoryStats :: ProcessedMemory,
     cpuStats :: ProcessedCPU,
-    -- | List of process information
     processStats :: ProcessList
   }
   deriving (Show, Eq)
