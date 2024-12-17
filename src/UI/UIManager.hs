@@ -63,7 +63,8 @@ data UIState = UIState
     awaitingKey :: Bool,
     tableSort :: SortColumn,
     selectedGraph :: GraphOptions,
-    orientation :: PaneOrientation
+    orientation :: PaneOrientation,
+    showGraphs :: Bool
   }
   deriving (Show, Eq)
 
@@ -96,7 +97,8 @@ buildInitialState = do
         awaitingKey = False,
         tableSort = maybe SortCPU savedTableSort settings,
         selectedGraph = maybe CpuPct savedSelectedGraph settings,
-        orientation = maybe LeftRight savedOrientation settings
+        orientation = maybe LeftRight savedOrientation settings,
+        showGraphs = True
       }
   where
     -- Placeholder empty state when we can't get system data
@@ -135,33 +137,41 @@ processesPane = renderProcesses
 additionalPane :: UIState -> Widget ResourceName
 additionalPane s = case orientation s of
   LeftRight ->
-    vBox
-      [ padTop (Pad 1) $
-          renderMemoryGraph s,
-        padTop (Pad 1) $
-          renderCPUGraph s
-      ]
+    vBox $
+      ( if showGraphs s
+          then
+            [ padTop (Pad 1) $ renderMemoryGraph s,
+              padTop (Pad 1) $ renderCPUGraph s
+            ]
+          else []
+      )
   RightLeft ->
-    vBox
-      [ padTop (Pad 1) $
-          renderMemoryGraph s,
-        padTop (Pad 1) $
-          renderCPUGraph s
-      ]
+    vBox $
+      ( if showGraphs s
+          then
+            [ padTop (Pad 1) $ renderMemoryGraph s,
+              padTop (Pad 1) $ renderCPUGraph s
+            ]
+          else []
+      )
   TopBottom ->
-    hBox
-      [ padLeft (Pad 1) $
-          renderMemoryGraph s,
-        padLeft (Pad 1) $
-          renderCPUGraph s
-      ]
+    hBox $
+      ( if showGraphs s
+          then
+            [ padLeft (Pad 1) $ renderMemoryGraph s,
+              padLeft (Pad 1) $ renderCPUGraph s
+            ]
+          else []
+      )
   BottomTop ->
-    hBox
-      [ padLeft (Pad 1) $
-          renderMemoryGraph s,
-        padLeft (Pad 1) $
-          renderCPUGraph s
-      ]
+    hBox $
+      ( if showGraphs s
+          then
+            [ padLeft (Pad 1) $ renderMemoryGraph s,
+              padLeft (Pad 1) $ renderCPUGraph s
+            ]
+          else []
+      )
 
 legendBox :: UIState -> Widget ResourceName
 legendBox s =
@@ -173,6 +183,7 @@ legendBox s =
             hBox
               [ str "q - Quit | ",
                 str "s - Sort processes | ",
+                str "g - Toggle graphs | ",
                 str "← - Left | ",
                 str "→ - Right | ",
                 str "↑ - Up | ",
@@ -267,6 +278,8 @@ handleEvent e = case e of
         halt
       V.EvKey (V.KChar 's') [] ->
         modify $ \s -> s {awaitingKey = True}
+      V.EvKey (V.KChar 'g') [] ->
+        modify $ \s -> s {showGraphs = not (showGraphs s)}
       V.EvKey KLeft [] -> modify (\s -> s {orientation = RightLeft})
       V.EvKey KRight [] -> modify (\s -> s {orientation = LeftRight})
       V.EvKey KUp [] -> modify (\s -> s {orientation = TopBottom})
