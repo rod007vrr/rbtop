@@ -8,11 +8,16 @@ make sure that we have the same values for everything there
 - make em work forreal
 
 To complete:
-- option for creating second pane, split vertically
-- click button to show graph - for this we need to store the old cpu and memory history to ensure that shows up
+- uncenter the graph and flip it (bekz)
+- some type of labeling on the graph (bekz)
+- controls thing at the top of screen ( - waiting for key for sort as well thing) (rod)
+- memory issue (rod)
+- get rid of tty column (rod)
+- really get testing up (both)
+
+- if time: make a seperate process for gathering data (rod)
 
 
-really get testing up
 
 
 have some initial setup where they ask us what we want to see onboarding 
