@@ -12,6 +12,7 @@ module UserSettings
 where
 
 import Control.Applicative
+import Control.Exception (try)
 import Parser
 import Parser qualified as P
 
@@ -81,9 +82,14 @@ saveUserSettings settings path = do
           ]
   writeFile path contents
 
+defaultSettings :: UserSettings
+defaultSettings = UserSettings {savedTableSort = SortCPU, savedSelectedGraph = CpuPct, savedOrientation = LeftRight}
+
 loadUserSettings :: FilePath -> IO (Maybe UserSettings)
 loadUserSettings path = do
-  contents <- readFile path
-  return $ case parse userSettingsP contents of
-    Left _ -> Nothing
-    Right settings -> Just settings
+  result <- try (readFile path) :: IO (Either IOError String)
+  case result of
+    Left _ -> return $ Just defaultSettings -- File doesn't exist
+    Right contents -> return $ case parse userSettingsP contents of
+      Left _ -> Just defaultSettings
+      Right settings -> Just settings
