@@ -2,24 +2,26 @@
 
 module UI.UIManager (ui) where
 
-import Brick (customMain, get, Widget (render), hLimit)
+import Brick (Widget (render), customMain, get, hLimit)
 import Brick.AttrMap (AttrName, attrMap, attrName)
 import Brick.BChan (BChan, newBChan, writeBChan)
 import Brick.Main (App (..), defaultMain, halt, neverShowCursor)
 import Brick.Types (BrickEvent (AppEvent, VtyEvent), EventM, Widget, modify)
 import Brick.Util (bg)
 import Brick.Widgets.Border (borderWithLabel)
+import Brick.Widgets.Center (hCenter)
 import Brick.Widgets.Core
   ( Padding (Pad),
+    emptyWidget,
     hBox,
     padLeft,
     padRight,
     padTop,
     str,
     vBox,
-    emptyWidget,
-    vLimit
+    vLimit,
   )
+import CPUCollector (ProcessedCPU (totalUsage))
 import Control.Concurrent (forkIO, threadDelay)
 import Control.Monad (forever, void, when)
 import Control.Monad.IO.Class (liftIO)
@@ -27,25 +29,25 @@ import Control.Monad.State
 import Data.Function
 import Data.List (break, drop, sortBy)
 import Data.List.Split
+import qualified Data.Maybe
 import qualified Data.Vector.Unboxed as V
-import Graphics.Vty (Event (EvKey), Key (KChar, KLeft, KRight, KDown, KUp), blue, defAttr, eventChannel)
+import Graphics.Vty (Event (EvKey), Key (KChar, KDown, KLeft, KRight, KUp), blue, defAttr, eventChannel)
 import qualified Graphics.Vty as V
 import qualified Graphics.Vty.CrossPlatform as V
+import MemoryCollector (ProcessedMemory (totalMem, usedMem))
 import ProcessCollector (Process (..), ProcessList)
 import SystemState (SystemState (..), gatherSystemState)
-import UI.Graph (GraphData (points, maxPoints, GraphData), renderThinBar)
+import UI.Graph (GraphData (GraphData, maxPoints, points), renderThinBar)
 import UI.Table (tableWidget)
 import UserSettings (GraphOptions (..), SortColumn (..))
-import MemoryCollector (ProcessedMemory (totalMem, usedMem))
-import CPUCollector (ProcessedCPU (totalUsage))
-import qualified Data.Maybe
-import Brick.Widgets.Center (hCenter)
 
 headerAttr :: AttrName
 headerAttr = attrName "header"
 
-type ResourceName = String
+userSettingsFile :: String
+userSettingsFile = "settings.txt"
 
+type ResourceName = String
 
 -- data PaneFocus = ProcessesPane | LegendPane | MemGraphPane | CPUGraphPane
 --   deriving (Eq, Show)
@@ -135,64 +137,76 @@ processesPane = renderProcesses
 
 additionalPane :: UIState -> Widget ResourceName
 additionalPane s = case orientation s of
-  LeftRight -> vBox
-    [ legendBox,
-      padTop (Pad 1) $
-        renderMemoryGraph s,
-      padTop (Pad 1) $
-        renderCPUGraph s
-    ]
-  RightLeft -> vBox
-    [ legendBox,
-      padTop (Pad 1) $
-        renderMemoryGraph s,
-      padTop (Pad 1) $
-        renderCPUGraph s
-    ]
-  TopBottom -> hBox
-    [ legendBox,
-      padLeft (Pad 1) $
-        renderMemoryGraph s,
-      padLeft (Pad 1) $
-        renderCPUGraph s
-    ]
-  BottomTop -> hBox
-    [ legendBox,
-      padLeft (Pad 1) $
-        renderMemoryGraph s,
-      padLeft (Pad 1) $
-        renderCPUGraph s
-    ]
+  LeftRight ->
+    vBox
+      [ legendBox,
+        padTop (Pad 1) $
+          renderMemoryGraph s,
+        padTop (Pad 1) $
+          renderCPUGraph s
+      ]
+  RightLeft ->
+    vBox
+      [ legendBox,
+        padTop (Pad 1) $
+          renderMemoryGraph s,
+        padTop (Pad 1) $
+          renderCPUGraph s
+      ]
+  TopBottom ->
+    hBox
+      [ legendBox,
+        padLeft (Pad 1) $
+          renderMemoryGraph s,
+        padLeft (Pad 1) $
+          renderCPUGraph s
+      ]
+  BottomTop ->
+    hBox
+      [ legendBox,
+        padLeft (Pad 1) $
+          renderMemoryGraph s,
+        padLeft (Pad 1) $
+          renderCPUGraph s
+      ]
 
 legendBox :: Widget ResourceName
-legendBox = hLimit 100 $ hCenter $
-  borderWithLabel (str "Controls") $
-    vBox
-      [ str "q - Quit",
-        str "s - Sort processes",
-        str "← - Left",
-        str "→ - Right",
-        str "↑ - Up",
-        str "↓ - Down"
-      ]
+legendBox =
+  hLimit 100 $
+    hCenter $
+      borderWithLabel (str "Controls") $
+        vBox
+          [ str "q - Quit",
+            str "s - Sort processes",
+            str "← - Left",
+            str "→ - Right",
+            str "↑ - Up",
+            str "↓ - Down"
+          ]
 
 renderGraph :: GraphData -> Widget ResourceName
 renderGraph graphData =
   let thinBars = map (`renderThinBar` 30) (V.toList (points graphData))
    in hBox $
-          map (padLeft (Pad 0) . padRight (Pad 0)) thinBars
+        map (padLeft (Pad 0) . padRight (Pad 0)) thinBars
 
 renderMemoryGraph :: UIState -> Widget ResourceName
 renderMemoryGraph s = case memGraphData s of
   Just graphData -> borderWithLabel (str "Memory Usage") $ hLimit 100 $ hCenter $ renderGraph graphData
-  Nothing -> hLimit 100 $ hCenter $ borderWithLabel (str "Memory Graph") $
-    vBox [str "No memory data available"]
+  Nothing ->
+    hLimit 100 $
+      hCenter $
+        borderWithLabel (str "Memory Graph") $
+          vBox [str "No memory data available"]
 
 renderCPUGraph :: UIState -> Widget ResourceName
 renderCPUGraph s = case cpuGraphData s of
   Just graphData -> borderWithLabel (str "CPU Usage") $ hLimit 100 $ hCenter $ renderGraph graphData
-  Nothing -> hLimit 100 $ hCenter $ borderWithLabel (str "CPU Graph") $
-    vBox [str "No CPU data available"]
+  Nothing ->
+    hLimit 100 $
+      hCenter $
+        borderWithLabel (str "CPU Graph") $
+          vBox [str "No CPU data available"]
 
 renderProcesses :: UIState -> Widget ResourceName
 renderProcesses s = tableWidget headers rows
@@ -214,7 +228,6 @@ renderProcesses s = tableWidget headers rows
         ]
     addSortMarker (header, col) = if col == tableSort s then "*" ++ header else header
     rows = map makeRow (sortProcessList (tableSort s) (processStats $ systemState s))
-
 
 makeRow :: Process -> [String]
 makeRow p =
@@ -251,7 +264,7 @@ handleEvent e = case e of
     case vtye of
       V.EvKey (V.KChar 'q') [] -> halt
       V.EvKey (V.KChar 's') [] ->
-        modify $ \s -> s { awaitingKey = True }
+        modify $ \s -> s {awaitingKey = True}
       V.EvKey KLeft [] -> modify (\s -> s {orientation = RightLeft})
       V.EvKey KRight [] -> modify (\s -> s {orientation = LeftRight})
       V.EvKey KUp [] -> modify (\s -> s {orientation = TopBottom})
@@ -280,11 +293,11 @@ whenAwaitingKey c = do
       'b' -> setSortColumn SortStarted
       'i' -> setSortColumn SortTime
       'u' -> setSortColumn SortUser
-      _   -> return ()
-    modify $ \s' -> s' { awaitingKey = False }
+      _ -> return ()
+    modify $ \s' -> s' {awaitingKey = False}
 
 setSortColumn :: SortColumn -> EventM ResourceName UIState ()
-setSortColumn col = modify $ \s -> s { tableSort = col }
+setSortColumn col = modify $ \s -> s {tableSort = col}
 
 -- updateSystemState :: EventM ResourceName UIState ()
 -- updateSystemState = do
@@ -319,15 +332,15 @@ calculateMemoryPercentage memStats =
 
 getOrInitGraph :: Maybe GraphData -> GraphData
 getOrInitGraph (Just graph) = graph
-getOrInitGraph Nothing = GraphData
-  { points = V.replicate 600 0,
-    maxPoints = 600
-  }
+getOrInitGraph Nothing =
+  GraphData
+    { points = V.replicate 600 0,
+      maxPoints = 600
+    }
 
 addDataPoint :: Double -> GraphData -> GraphData
 addDataPoint newPoint graph =
-  graph { points = V.take (maxPoints graph) (V.cons newPoint (points graph)) }
-
+  graph {points = V.take (maxPoints graph) (V.cons newPoint (points graph))}
 
 -- renderGraph :: GraphData -> Widget ResourceName
 -- renderGraph graphData =

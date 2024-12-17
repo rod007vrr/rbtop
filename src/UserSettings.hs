@@ -1,6 +1,14 @@
 {-# LANGUAGE ImportQualifiedPost #-}
 
-module UserSettings (SortColumn (..), GraphOptions (..), UserSettings (..), saveUserSettings, loadUserSettings, userSettingsP) where
+module UserSettings
+  ( SortColumn (..),
+    GraphOptions (..),
+    UserSettings (..),
+    saveUserSettings,
+    loadUserSettings,
+    userSettingsP,
+  )
+where
 
 import Control.Applicative
 import Parser
