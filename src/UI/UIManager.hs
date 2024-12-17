@@ -2,7 +2,7 @@
 
 module UI.UIManager (ui) where
 
-import Brick (customMain)
+import Brick (customMain, get)
 import Brick.AttrMap (AttrName, attrMap, attrName)
 import Brick.BChan (BChan, newBChan, writeBChan)
 import Brick.Main (App (..), defaultMain, halt, neverShowCursor)
@@ -18,7 +18,7 @@ import Brick.Widgets.Core
     vBox,
   )
 import Control.Concurrent (forkIO, threadDelay)
-import Control.Monad (forever, void)
+import Control.Monad (forever, void, when)
 import Control.Monad.IO.Class (liftIO)
 import Data.List.Split
 import qualified Data.Vector.Unboxed as V
@@ -53,13 +53,15 @@ buildInitialState = do
       UIState
         { systemState = sysState,
           cpuGraphData = Nothing,
-          memGraphData = Nothing
+          memGraphData = Nothing,
+          awaitingKey = False
         }
     Nothing ->
       UIState
         { systemState = emptySystemState,
           cpuGraphData = Nothing,
-          memGraphData = Nothing
+          memGraphData = Nothing,
+          awaitingKey = False
         }
   where
     -- Placeholder empty state when we can't get system data
@@ -75,7 +77,8 @@ type ResourceName = String
 data UIState = UIState
   { systemState :: SystemState,
     cpuGraphData :: Maybe GraphData,
-    memGraphData :: Maybe GraphData
+    memGraphData :: Maybe GraphData,
+    awaitingKey :: Bool
   }
   deriving (Show, Eq)
 
@@ -147,6 +150,13 @@ handleEvent e = case e of
   VtyEvent vtye ->
     case vtye of
       V.EvKey (V.KChar 'q') [] -> halt
+      V.EvKey (V.KChar 's') [] ->
+        modify $ \s -> s {awaitingKey = True}
+      V.EvKey (V.KChar c) [] -> do
+        s <- get
+        when (awaitingKey s) $ do
+          liftIO $ putStrLn $ "You pressed: " ++ [c]
+          modify $ \s' -> s' {awaitingKey = False}
       _ -> return ()
   AppEvent Tick -> do
     mNewState <- liftIO gatherSystemState
