@@ -3,10 +3,13 @@
 module CPUCollector
   ( ProcessedCPU (..),
     ProcessedCPUList,
+    RawCPU (..),
     getRawCPUData,
     printRawCPUStats,
     getProcessedCPU,
     monitorCPU,
+    processRawCPUData,
+    rawToFull,
   )
 where
 
