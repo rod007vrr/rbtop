@@ -41,7 +41,7 @@ ui = do
   let buildVty = V.mkVty V.defaultConfig
   initialVty <- buildVty
 
-  endState <- customMain initialVty buildVty (Just chan) (app chan) initialState
+  endState <- customMain initialVty buildVty (Just chan) app initialState
 
   print endState
 
@@ -84,8 +84,8 @@ data UIState = UIState
 
 data CustomEvent = Tick
 
-app :: BChan CustomEvent -> App UIState CustomEvent ResourceName
-app chan =
+app :: App UIState CustomEvent ResourceName
+app =
   App
     { appDraw = drawUI,
       appChooseCursor = neverShowCursor,
