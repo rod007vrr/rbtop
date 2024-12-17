@@ -34,8 +34,8 @@ data GraphOptions
   deriving (Show, Eq, Read)
 
 data UserSettings = UserSettings
-  { tableSort :: SortColumn,
-    selectedGraph :: GraphOptions
+  { savedTableSort :: SortColumn,
+    savedSelectedGraph :: GraphOptions
   }
   deriving (Show, Eq)
 
@@ -64,8 +64,8 @@ saveUserSettings :: UserSettings -> FilePath -> IO ()
 saveUserSettings settings path = do
   let contents =
         unlines
-          [ "tableSort=" ++ show (tableSort settings),
-            "selectedGraph=" ++ show (selectedGraph settings)
+          [ "tableSort=" ++ show (savedTableSort settings),
+            "selectedGraph=" ++ show (savedSelectedGraph settings)
           ]
   writeFile path contents
 

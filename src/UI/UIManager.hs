@@ -39,7 +39,13 @@ import ProcessCollector (Process (..), ProcessList)
 import SystemState (SystemState (..), gatherSystemState)
 import UI.Graph (GraphData (GraphData, maxPoints, points), renderThinBar)
 import UI.Table (tableWidget)
-import UserSettings (GraphOptions (..), SortColumn (..))
+import UserSettings
+  ( GraphOptions (..),
+    SortColumn (..),
+    UserSettings (UserSettings, savedSelectedGraph, savedTableSort),
+    loadUserSettings,
+    saveUserSettings,
+  )
 
 headerAttr :: AttrName
 headerAttr = attrName "header"
@@ -84,28 +90,18 @@ ui = do
 
 buildInitialState :: IO UIState
 buildInitialState = do
+  settings <- loadUserSettings userSettingsFile
   maybeSystemState <- gatherSystemState
-  pure $ case maybeSystemState of
-    Just sysState ->
-      UIState
-        { systemState = sysState,
-          cpuGraphData = Nothing,
-          memGraphData = Nothing,
-          awaitingKey = False,
-          tableSort = SortCPU,
-          selectedGraph = CpuPct,
-          orientation = LeftRight
-        }
-    Nothing ->
-      UIState
-        { systemState = emptySystemState,
-          cpuGraphData = Nothing,
-          memGraphData = Nothing,
-          awaitingKey = False,
-          tableSort = SortCPU,
-          selectedGraph = CpuPct,
-          orientation = LeftRight
-        }
+  pure $
+    UIState
+      { systemState = maybe emptySystemState id maybeSystemState,
+        cpuGraphData = Nothing,
+        memGraphData = Nothing,
+        awaitingKey = False,
+        tableSort = maybe SortCPU savedTableSort settings,
+        selectedGraph = maybe CpuPct savedSelectedGraph settings,
+        orientation = LeftRight
+      }
   where
     -- Placeholder empty state when we can't get system data
     emptySystemState =
@@ -262,7 +258,13 @@ handleEvent :: BrickEvent ResourceName CustomEvent -> EventM ResourceName UIStat
 handleEvent e = case e of
   VtyEvent vtye ->
     case vtye of
-      V.EvKey (V.KChar 'q') [] -> halt
+      V.EvKey (V.KChar 'q') [] -> do
+        s <- get
+        liftIO $
+          saveUserSettings
+            (UserSettings (tableSort s) (selectedGraph s))
+            userSettingsFile
+        halt
       V.EvKey (V.KChar 's') [] ->
         modify $ \s -> s {awaitingKey = True}
       V.EvKey KLeft [] -> modify (\s -> s {orientation = RightLeft})
